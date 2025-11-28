@@ -16,9 +16,8 @@ func Parse(source []byte) (ast.Node, map[string]any) {
 	)
 	context := parser.NewContext()
 
-	parser := markdown.Parser()
 	reader := text.NewReader(source)
-	document := parser.Parse(reader)
+	document := markdown.Parser().Parse(reader, parser.WithContext(context))
 	metadata := meta.Get(context)
 
 	return document, metadata
