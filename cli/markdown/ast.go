@@ -12,17 +12,17 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-type dumpMarkdownCommand struct {
+type extractMarkdownAstCommand struct {
 	common.Command
 }
 
-func NewDumpMarkdownCommand() *cobra.Command {
-	var command *dumpMarkdownCommand
+func NewExtractAstCommand() *cobra.Command {
+	var command *extractMarkdownAstCommand
 
-	command = &dumpMarkdownCommand{
+	command = &extractMarkdownAstCommand{
 		Command: common.Command{
 			CobraCommand: cobra.Command{
-				Use:   "dump",
+				Use:   "ast",
 				Short: "Markdown AST dump",
 				Long:  `Prints out the AST of a markdown file.`,
 				Args:  cobra.ExactArgs(1),
@@ -36,7 +36,7 @@ func NewDumpMarkdownCommand() *cobra.Command {
 	return command.AsCobraCommand()
 }
 
-func (c *dumpMarkdownCommand) execute(path string) error {
+func (c *extractMarkdownAstCommand) execute(path string) error {
 	source, err := os.ReadFile(path)
 	if err != nil {
 		return err

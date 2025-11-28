@@ -11,7 +11,8 @@ func NewMarkdownCommand() *cobra.Command {
 		Long:  `Markdown functionality`,
 	}
 
-	command.AddCommand(NewDumpMarkdownCommand())
+	command.AddCommand(NewExtractAstCommand())
+	command.AddCommand(NewExtractMarkdownMetadataCommand())
 
 	return &command
 }
