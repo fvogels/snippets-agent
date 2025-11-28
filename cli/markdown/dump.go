@@ -2,14 +2,13 @@ package markdown
 
 import (
 	"code-snippets/cli/common"
+	"code-snippets/markdown"
 	"fmt"
 	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
-	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/text"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -38,18 +37,14 @@ func NewDumpMarkdownCommand() *cobra.Command {
 }
 
 func (c *dumpMarkdownCommand) execute(path string) error {
-	markdown, err := os.ReadFile(path)
+	source, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	parser := goldmark.DefaultParser()
-	reader := text.NewReader(markdown)
-	document := parser.Parse(reader)
+	document, _ := markdown.Parse(source)
+	tree := convert(document, source)
 
-	tree := convert(document, markdown)
-
-	// buffer, err := json.MarshalIndent(tree, "", "  ")
 	buffer, err := yaml.Marshal(tree)
 	if err != nil {
 		return err
