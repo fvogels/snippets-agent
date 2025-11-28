@@ -26,9 +26,9 @@ func NewDumpMarkdownCommand() *cobra.Command {
 				Use:   "dump",
 				Short: "Markdown AST dump",
 				Long:  `Prints out the AST of a markdown file.`,
-				Args:  cobra.NoArgs,
+				Args:  cobra.ExactArgs(1),
 				RunE: func(cmd *cobra.Command, args []string) error {
-					return command.execute()
+					return command.execute(args[0])
 				},
 			},
 		},
@@ -37,8 +37,8 @@ func NewDumpMarkdownCommand() *cobra.Command {
 	return command.AsCobraCommand()
 }
 
-func (c *dumpMarkdownCommand) execute() error {
-	markdown, err := os.ReadFile("f:/repos/code-snippets/data/test/ssh-config.md")
+func (c *dumpMarkdownCommand) execute(path string) error {
+	markdown, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
