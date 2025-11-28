@@ -27,6 +27,7 @@ func NewRootCommand() *cobra.Command {
 	rootCommand.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 
 	rootCommand.AddCommand(config.NewConfigurationCommand())
+	rootCommand.AddCommand(markdown.NewMarkdownCommand())
 
 	return &rootCommand
 }
