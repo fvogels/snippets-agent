@@ -3,8 +3,6 @@ package config
 import (
 	"code-snippets/cli/common"
 	"fmt"
-	"os"
-	"path"
 
 	"github.com/spf13/cobra"
 )
@@ -34,13 +32,11 @@ func NewShowConfigurationPathCommand() *cobra.Command {
 }
 
 func (c *showConfigurationPathCommand) execute() error {
-	parentDirectory, err := os.UserHomeDir()
+	configurationPath, err := common.GetConfigurationFilePath()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get configuration path: %w", err)
 	}
 
-	filename := ".snippets.toml"
-	fullPath := path.Join(parentDirectory, filename)
-	fmt.Println(fullPath)
+	fmt.Println(configurationPath)
 	return nil
 }
