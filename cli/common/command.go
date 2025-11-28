@@ -1,6 +1,7 @@
 package common
 
 import (
+	"code-snippets/configuration"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -8,7 +9,7 @@ import (
 
 type Command struct {
 	CobraCommand  cobra.Command
-	Configuration *Configuration
+	Configuration *configuration.Configuration
 }
 
 func (command *Command) PrintErrorf(formatString string, args ...any) {
@@ -24,12 +25,12 @@ func (command *Command) AsCobraCommand() *cobra.Command {
 }
 
 func (command *Command) LoadConfiguration() error {
-	configurationPath, err := GetConfigurationFilePath()
+	configurationPath, err := configuration.GetPath()
 	if err != nil {
 		return fmt.Errorf("failed to determine configuration file path: %w", err)
 	}
 
-	configuration, err := LoadConfiguration(configurationPath)
+	configuration, err := configuration.Load(configurationPath)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration file: %w", err)
 	}

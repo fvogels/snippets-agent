@@ -2,6 +2,7 @@ package config
 
 import (
 	"code-snippets/cli/common"
+	"code-snippets/configuration"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -32,7 +33,7 @@ func NewShowConfigurationPathCommand() *cobra.Command {
 }
 
 func (c *showConfigurationPathCommand) execute() error {
-	configurationPath, err := common.GetConfigurationFilePath()
+	configurationPath, err := configuration.GetPath()
 	if err != nil {
 		return fmt.Errorf("failed to get configuration path: %w", err)
 	}

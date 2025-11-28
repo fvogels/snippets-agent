@@ -1,4 +1,4 @@
-package common
+package configuration
 
 import (
 	"os"
@@ -8,10 +8,10 @@ import (
 )
 
 type Configuration struct {
-	DataDirectory string
+	DataRoot string
 }
 
-func GetConfigurationFilePath() (string, error) {
+func GetPath() (string, error) {
 	parentDirectory, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -23,7 +23,7 @@ func GetConfigurationFilePath() (string, error) {
 	return fullPath, nil
 }
 
-func LoadConfiguration(path string) (*Configuration, error) {
+func Load(path string) (*Configuration, error) {
 	var configuration Configuration
 	_, err := toml.DecodeFile(path, &configuration)
 	if err != nil {
