@@ -37,13 +37,7 @@ func (c *listEntriesCommand) execute() error {
 	c.LoadConfiguration()
 
 	var entries []*data.Entry
-	err := data.FindFiles(c.Configuration.DataRoot, func(path string) error {
-		entry, err := data.ReadEntry(path)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("title: %s\n", entry.Title)
+	err := data.ReadAllEntries(c.Configuration.DataRoot, func(entry *data.Entry) error {
 		entries = append(entries, entry)
 		return nil
 	})
