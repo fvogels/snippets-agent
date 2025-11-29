@@ -1,8 +1,6 @@
 package main
 
-import (
-	"code-snippets/cli"
-)
+import "code-snippets/cli"
 
 func main() {
 	cli.Execute()
