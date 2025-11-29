@@ -2,6 +2,8 @@ package cli
 
 import (
 	"code-snippets/cli/config"
+	"code-snippets/cli/data"
+	"code-snippets/cli/markdown"
 	"log/slog"
 	"os"
 
@@ -28,6 +30,8 @@ func NewRootCommand() *cobra.Command {
 
 	rootCommand.AddCommand(config.NewConfigurationCommand())
 	rootCommand.AddCommand(markdown.NewMarkdownCommand())
+	rootCommand.AddCommand(data.NewDataCommand())
+	rootCommand.AddCommand(NewStartUserInterfaceCommand())
 
 	return &rootCommand
 }
