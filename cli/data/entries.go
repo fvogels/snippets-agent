@@ -36,9 +36,9 @@ func NewListEntriesCommand() *cobra.Command {
 func (c *listEntriesCommand) execute() error {
 	c.LoadConfiguration()
 
-	var entries []*data.Entry
+	var entries []*ExportableEntry
 	err := data.ReadAllEntries(c.Configuration.DataRoot, func(entry *data.Entry) error {
-		entries = append(entries, entry)
+		entries = append(entries, convert(entry))
 		return nil
 	})
 	if err != nil {
@@ -53,4 +53,18 @@ func (c *listEntriesCommand) execute() error {
 	fmt.Println(string(buffer))
 
 	return nil
+}
+
+func convert(entry *data.Entry) *ExportableEntry {
+	return &ExportableEntry{
+		Title: entry.Title,
+		Path:  entry.Path,
+		Tags:  entry.Tags.ToSlice(),
+	}
+}
+
+type ExportableEntry struct {
+	Title string
+	Path  string
+	Tags  []string
 }
