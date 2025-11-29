@@ -1,7 +1,9 @@
-package taglist
+package entrylist
 
 import (
+	"code-snippets/data"
 	"code-snippets/ui/stringlist"
+	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -30,8 +32,9 @@ func (model Model) View() string {
 	return model.stringList.View()
 }
 
-func (model *Model) SetTags(tags []string) {
-	model.stringList.SetStrings(tags)
+func (model *Model) SetEntries(entries []*data.Entry) {
+	titles := util.Map(entries, func(entry *data.Entry) string { return entry.Title })
+	model.stringList.SetStrings(titles)
 }
 
 func (model *Model) SetWidth(width int) {

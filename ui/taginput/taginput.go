@@ -35,22 +35,27 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 
 		case "backspace":
 			if len(model.inProgress) > 0 {
-				model.removeLastCharacterFromInProgress()
+				command := model.removeLastCharacterFromInProgress()
+				return model, command
 			} else {
-				model.dropLastCompletedTag()
+				command := model.dropLastCompletedTag()
+				return model, command
 			}
-			return model, nil
 
 		case "ctrl+w":
 			if len(model.inProgress) > 0 {
-				model.clearInProgress()
+				command := model.clearInProgress()
+				return model, command
 			} else {
-				model.clearCompletedTags()
+				command := model.clearCompletedTags()
+				return model, command
 			}
 
 		case " ":
 			model.completedTags = append(model.completedTags, model.inProgress)
 			model.inProgress = ""
+			command := model.createSelectedTagsChangedMessage()
+			return model, command
 		}
 	}
 
@@ -71,22 +76,45 @@ func (model Model) View() string {
 	return lipgloss.JoinHorizontal(0, parts...)
 }
 
-func (model *Model) removeLastCharacterFromInProgress() {
+func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {
 	if len(model.inProgress) > 0 {
 		model.inProgress = model.inProgress[:len(model.inProgress)-1]
 	}
+
+	return nil
 }
 
-func (model *Model) clearInProgress() {
+func (model *Model) clearInProgress() tea.Cmd {
 	model.inProgress = ""
+	return nil
 }
 
-func (model *Model) dropLastCompletedTag() {
+func (model *Model) dropLastCompletedTag() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = model.completedTags[:len(model.completedTags)-1]
+		return model.createSelectedTagsChangedMessage()
+	}
+
+	return nil
+}
+
+func (model *Model) clearCompletedTags() tea.Cmd {
+	if len(model.completedTags) > 0 {
+		model.completedTags = nil
+		return model.createSelectedTagsChangedMessage()
+	}
+
+	return nil
+}
+
+func (model *Model) createSelectedTagsChangedMessage() tea.Cmd {
+	return func() tea.Msg {
+		return SelectedTagsChangedMessage{}
 	}
 }
 
-func (model *Model) clearCompletedTags() {
-	model.completedTags = nil
+func (model *Model) GetTags() []string {
+	return model.completedTags
 }
+
+type SelectedTagsChangedMessage struct{}

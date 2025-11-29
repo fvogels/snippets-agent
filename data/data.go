@@ -2,6 +2,7 @@ package data
 
 import (
 	"code-snippets/markdown"
+	"code-snippets/util"
 	"fmt"
 	"io/fs"
 	pathlib "path"
@@ -37,12 +38,13 @@ func FindFiles(rootDirectory string, callback func(path string) error) error {
 }
 
 type Entry struct {
-	Path  string
-	Title string
-	Tags  []string
+	Identifier int              `json:"identifier"`
+	Path       string           `json:"path"`
+	Title      string           `json:"title"`
+	Tags       util.Set[string] `json:"tags"`
 }
 
-func ReadEntry(path string) (*Entry, error) {
+func ReadEntry(path string, identifier int) (*Entry, error) {
 	markdownFile, err := markdown.ParseFile(path)
 	if err != nil {
 		return nil, err
@@ -62,36 +64,41 @@ func ReadEntry(path string) (*Entry, error) {
 		return nil, fmt.Errorf("tags missing in %s", path)
 	}
 
-	var tags []string
-
+	var tags util.Set[string]
 	if tagsList, ok := tagsObject.([]string); ok {
-		tags = tagsList
+		tags = util.NewSetFromSlice(tagsList)
 	} else if tagsList, ok := tagsObject.([]any); ok {
+		tags = util.NewSet[string]()
 		for _, tagObject := range tagsList {
 			tag, ok := tagObject.(string)
 			if !ok {
 				return nil, fmt.Errorf("tags %v have invalid type %s in %s", tagsObject, path, reflect.TypeOf(tagsObject))
 			}
-			tags = append(tags, tag)
+			tags.Add(tag)
 		}
 	} else if tag, ok := tagsObject.(string); ok {
-		tags = []string{tag}
+		tags = util.NewSetFromSlice([]string{tag})
 	} else {
 		return nil, fmt.Errorf("tags %v have invalid type %s in %s", tagsObject, path, reflect.TypeOf(tagsObject))
 	}
 
 	entry := Entry{
-		Path:  path,
-		Title: title,
-		Tags:  tags,
+		Identifier: identifier,
+		Path:       path,
+		Title:      title,
+		Tags:       tags,
 	}
 
 	return &entry, nil
 }
 
 func ReadAllEntries(rootDirectory string, callback func(*Entry) error) error {
+	counter := 0
+
 	return FindFiles(rootDirectory, func(path string) error {
-		entry, err := ReadEntry(path)
+		entry, err := ReadEntry(path, counter)
+		counter++
+
 		if err != nil {
 			return err
 		}

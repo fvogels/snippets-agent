@@ -1,11 +1,16 @@
 package data
 
+import "code-snippets/util"
+
 type Repository interface {
 	ListTags() []string
+	EnumerateTags(callback func(string) error) error
+	EnumerateEntries(selectedTags util.Set[string], callback func(*Entry) error) error
 }
 
 type MemoryRepository struct {
 	tagTable map[string][]*Entry
+	entries  []*Entry
 }
 
 func (repository *MemoryRepository) ListTags() []string {
@@ -18,11 +23,36 @@ func (repository *MemoryRepository) ListTags() []string {
 	return tags
 }
 
+func (repository *MemoryRepository) EnumerateTags(callback func(string) error) error {
+	for tag := range repository.tagTable {
+		if err := callback(tag); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (repository *MemoryRepository) EnumerateEntries(selectedTags util.Set[string], callback func(*Entry) error) error {
+	for _, entry := range repository.entries {
+		if selectedTags.IsSubsetOf(entry.Tags) {
+			if err := callback(entry); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func LoadRepository(rootDirectory string) (Repository, error) {
 	tagTable := make(map[string][]*Entry)
+	var entries []*Entry
 
 	err := ReadAllEntries(rootDirectory, func(entry *Entry) error {
-		for _, tag := range entry.Tags {
+		entries = append(entries, entry)
+
+		for _, tag := range entry.Tags.ToSlice() {
 			entriesWithTag, ok := tagTable[tag]
 			if !ok {
 				entriesWithTag = nil
@@ -40,6 +70,7 @@ func LoadRepository(rootDirectory string) (Repository, error) {
 
 	repository := MemoryRepository{
 		tagTable: tagTable,
+		entries:  entries,
 	}
 
 	return &repository, nil
