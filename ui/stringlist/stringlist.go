@@ -15,6 +15,7 @@ type Model struct {
 	width             int
 	maximumHeight     int
 	filter            func(item string) bool
+	emptyListMessage  string
 }
 
 func New(allowSelection bool) Model {
@@ -62,7 +63,7 @@ func (model Model) View() string {
 	itemsToBeShown := model.filteredItems
 
 	if len(itemsToBeShown) == 0 {
-		return ""
+		return model.emptyListMessage
 	}
 
 	itemStyle := lipgloss.NewStyle().Width(model.width)
@@ -125,4 +126,8 @@ func (model *Model) ensureSelectedIsVisible() {
 	} else if model.firstVisibleIndex+model.maximumHeight < model.selectedIndex {
 		model.firstVisibleIndex = model.selectedIndex - model.maximumHeight + 1
 	}
+}
+
+func (model *Model) SetEmptyListMessage(message string) {
+	model.emptyListMessage = message
 }
