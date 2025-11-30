@@ -121,6 +121,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 
 	case taginput.MsgInputChanged:
+		model.updateTagListFilter()
 		model.refreshTagList()
 		return model, nil
 	}
@@ -152,22 +153,17 @@ func (model *Model) recomputeCompatibleTagsAndEntries() {
 }
 
 func (model *Model) refreshTagList() {
-	shownTags := []string{}
-	partiallyInputtedTag := model.tagInput.GetPartiallyInputtedTag()
-
-	slog.Debug("Refreshing tag list", slog.String("partial input", partiallyInputtedTag))
-
-	for _, tag := range model.compatibleTags {
-		if strings.Contains(tag, partiallyInputtedTag) {
-			shownTags = append(shownTags, tag)
-		}
-	}
-
-	model.tagList.SetTags(shownTags)
+	model.tagList.SetTags(model.compatibleTags)
 }
 
 func (model *Model) refreshEntryList() {
 	model.entryList.SetEntries(model.compatibleEntries)
+}
+
+func (model *Model) updateTagListFilter() {
+	model.tagList.SetFilter(func(tag string) bool {
+		return strings.Contains(tag, model.tagInput.GetPartiallyInputtedTag())
+	})
 }
 
 func Start(configuration *configuration.Configuration) error {
