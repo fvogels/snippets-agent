@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -23,6 +24,7 @@ type Model struct {
 	screenHeight      int
 	compatibleTags    []string
 	compatibleEntries []*data.Entry
+	renderedMarkdown  string
 
 	tagList   taglist.Model
 	entryList entrylist.Model
@@ -56,7 +58,11 @@ func (model Model) View() string {
 		lipgloss.JoinHorizontal(
 			0,
 			lipgloss.NewStyle().Width(20).Height(model.screenHeight-1).Render(model.tagList.View()),
-			lipgloss.NewStyle().Height(model.screenHeight-1).Render(model.entryList.View()),
+			lipgloss.JoinVertical(
+				0,
+				lipgloss.NewStyle().Height(20).Render(model.entryList.View()),
+				lipgloss.NewStyle().Height(model.screenHeight-21).Render(model.renderedMarkdown),
+			),
 		),
 		model.tagInput.View(),
 	)
@@ -98,6 +104,10 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			updatedEntryList, command := model.entryList.Update(entrylist.MsgSelectPrevious{})
 			model.entryList = updatedEntryList
 			return model, command
+
+		case "enter":
+			model.showSelectedEntry()
+			return model, nil
 
 		default:
 			updatedTagInput, command := model.tagInput.Update(message)
@@ -164,6 +174,21 @@ func (model *Model) updateTagListFilter() {
 	model.tagList.SetFilter(func(tag string) bool {
 		return strings.Contains(tag, model.tagInput.GetPartiallyInputtedTag())
 	})
+}
+
+func (model *Model) showSelectedEntry() {
+	entry := model.entryList.GetSelectedEntry()
+	source, err := entry.LoadSource()
+	if err != nil {
+		panic("failed to load markdown file")
+	}
+
+	renderedMarkdown, err := glamour.Render(source, "dark")
+	if err != nil {
+		panic("failed to render markdown file")
+	}
+
+	model.renderedMarkdown = renderedMarkdown
 }
 
 func Start(configuration *configuration.Configuration) error {
