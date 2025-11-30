@@ -5,6 +5,7 @@ import (
 	"code-snippets/util"
 	"fmt"
 	"io/fs"
+	"os"
 	pathlib "path"
 	"path/filepath"
 	"reflect"
@@ -42,6 +43,15 @@ type Entry struct {
 	Path       string           `json:"path"`
 	Title      string           `json:"title"`
 	Tags       util.Set[string] `json:"tags"`
+}
+
+func (entry *Entry) LoadSource() (string, error) {
+	data, err := os.ReadFile(entry.Path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func ReadEntry(path string, identifier int) (*Entry, error) {
