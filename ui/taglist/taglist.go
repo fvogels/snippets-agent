@@ -12,7 +12,7 @@ type Model struct {
 
 func New() Model {
 	return Model{
-		stringList: stringlist.New(),
+		stringList: stringlist.New(false),
 	}
 }
 
