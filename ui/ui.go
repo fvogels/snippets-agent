@@ -32,13 +32,6 @@ func New(repository data.Repository) tea.Model {
 		tagInput:     taginput.New(),
 	}
 
-	// entries := []*data.Entry{}
-	// model.repository.EnumerateEntries(nil, func(entry *data.Entry) error {
-	// 	entries = append(entires, entry)
-	// 	return nil
-	// })
-	// model.entryList.SetEntries(entries)
-	// model.tagList.SetTags(model.repository.ListTags())
 	model.refreshLists()
 
 	return model
@@ -66,6 +59,26 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		switch message.String() {
 		case "ctrl+c":
 			return model, tea.Quit
+
+		case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
+			updatedTagInput, command := model.tagInput.Update(taginput.MsgAddCharacter{Character: message.String()})
+			model.tagInput = updatedTagInput
+			return model, command
+
+		case "backspace":
+			updatedTagInput, command := model.tagInput.Update(taginput.MsgClearSingle{})
+			model.tagInput = updatedTagInput
+			return model, command
+
+		case "ctrl+w":
+			updatedTagInput, command := model.tagInput.Update(taginput.MsgClearAll{})
+			model.tagInput = updatedTagInput
+			return model, command
+
+		case " ":
+			updatedTagInput, command := model.tagInput.Update(taginput.MsgAddTag{})
+			model.tagInput = updatedTagInput
+			return model, command
 
 		default:
 			updatedTagInput, command := model.tagInput.Update(message)

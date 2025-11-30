@@ -27,36 +27,33 @@ func (model Model) Init() tea.Cmd {
 
 func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 	switch message := message.(type) {
-	case tea.KeyMsg:
-		switch message.String() {
-		case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
-			model.inProgress += message.String()
-			return model, nil
+	case MsgAddCharacter:
+		model.inProgress += message.Character
+		return model, nil
 
-		case "backspace":
-			if len(model.inProgress) > 0 {
-				command := model.removeLastCharacterFromInProgress()
-				return model, command
-			} else {
-				command := model.dropLastCompletedTag()
-				return model, command
-			}
-
-		case "ctrl+w":
-			if len(model.inProgress) > 0 {
-				command := model.clearInProgress()
-				return model, command
-			} else {
-				command := model.clearCompletedTags()
-				return model, command
-			}
-
-		case " ":
-			model.completedTags = append(model.completedTags, model.inProgress)
-			model.inProgress = ""
-			command := model.createSelectedTagsChangedMessage()
+	case MsgClearSingle:
+		if len(model.inProgress) > 0 {
+			command := model.removeLastCharacterFromInProgress()
+			return model, command
+		} else {
+			command := model.dropLastCompletedTag()
 			return model, command
 		}
+
+	case MsgClearAll:
+		if len(model.inProgress) > 0 {
+			command := model.clearInProgress()
+			return model, command
+		} else {
+			command := model.clearCompletedTags()
+			return model, command
+		}
+
+	case MsgAddTag:
+		model.completedTags = append(model.completedTags, model.inProgress)
+		model.inProgress = ""
+		command := model.createSelectedTagsChangedMessage()
+		return model, command
 	}
 
 	return model, nil
