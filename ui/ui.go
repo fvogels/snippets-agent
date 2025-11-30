@@ -80,6 +80,16 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			model.tagInput = updatedTagInput
 			return model, command
 
+		case "down":
+			updatedEntryList, command := model.entryList.Update(entrylist.MsgSelectNext{})
+			model.entryList = updatedEntryList
+			return model, command
+
+		case "up":
+			updatedEntryList, command := model.entryList.Update(entrylist.MsgSelectPrevious{})
+			model.entryList = updatedEntryList
+			return model, command
+
 		default:
 			updatedTagInput, command := model.tagInput.Update(message)
 			model.tagInput = updatedTagInput
