@@ -9,6 +9,7 @@ import (
 	pathlib "path"
 	"path/filepath"
 	"reflect"
+	"strings"
 )
 
 func FindFiles(rootDirectory string, callback func(path string) error) error {
@@ -51,7 +52,23 @@ func (entry *Entry) LoadSource() (string, error) {
 		return "", err
 	}
 
-	return string(data), nil
+	contents := string(data)
+	lines := strings.Lines(contents)
+
+	contentsWithoutMetadata := []string{}
+	metadataLinesFound := 0
+	lines(func(line string) bool {
+		if metadataLinesFound < 2 {
+			if strings.TrimSpace(line) == "---" {
+				metadataLinesFound++
+			}
+		} else {
+			contentsWithoutMetadata = append(contentsWithoutMetadata, line)
+		}
+		return true
+	})
+
+	return strings.Join(contentsWithoutMetadata, ""), nil
 }
 
 func ReadEntry(path string, identifier int) (*Entry, error) {
