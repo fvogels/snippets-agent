@@ -52,7 +52,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 	case MsgAddTag:
 		model.completedTags = append(model.completedTags, model.inProgress)
 		model.inProgress = ""
-		command := model.createSelectedTagsChangedMessage()
+		command := model.signalSelectedTagsChanged()
 		return model, command
 	}
 
@@ -89,7 +89,7 @@ func (model *Model) clearInProgress() tea.Cmd {
 func (model *Model) dropLastCompletedTag() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = model.completedTags[:len(model.completedTags)-1]
-		return model.createSelectedTagsChangedMessage()
+		return model.signalSelectedTagsChanged()
 	}
 
 	return nil
@@ -98,13 +98,13 @@ func (model *Model) dropLastCompletedTag() tea.Cmd {
 func (model *Model) clearCompletedTags() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = nil
-		return model.createSelectedTagsChangedMessage()
+		return model.signalSelectedTagsChanged()
 	}
 
 	return nil
 }
 
-func (model *Model) createSelectedTagsChangedMessage() tea.Cmd {
+func (model *Model) signalSelectedTagsChanged() tea.Cmd {
 	return func() tea.Msg {
 		return SelectedTagsChangedMessage{}
 	}
