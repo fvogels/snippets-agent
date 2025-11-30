@@ -54,6 +54,10 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
+	if len(model.strings) == 0 {
+		return ""
+	}
+
 	itemStyle := lipgloss.NewStyle().Width(model.width)
 	selectedItemStyle := itemStyle.Background(lipgloss.Color("#AAAAAA"))
 	rowIndex := 0
@@ -83,6 +87,11 @@ func (model *Model) GetStrings() []string {
 
 func (model *Model) SetStrings(strings []string) {
 	model.strings = strings
+	model.firstVisibleIndex = 0
+
+	if model.selectedIndex >= 0 {
+		model.selectedIndex = 0
+	}
 }
 
 func (model *Model) SetWidth(width int) {
