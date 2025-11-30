@@ -46,3 +46,39 @@ func ParseFile(path string) (*MarkdownFile, error) {
 
 	return &markdownFile, nil
 }
+
+type CodeBlock struct {
+	Language string
+	Content  string
+}
+
+func ExtractCodeBlocks(source []byte, node ast.Node) []CodeBlock {
+	result := []CodeBlock{}
+
+	findFencedCodeBlocks(node, func(fencedCodeBlock *ast.FencedCodeBlock) {
+		language := string(fencedCodeBlock.Language(source))
+		content := string(fencedCodeBlock.Lines().Value(source))
+		codeblock := CodeBlock{
+			Language: language,
+			Content:  content,
+		}
+
+		result = append(result, codeblock)
+	})
+
+	return result
+}
+
+func findFencedCodeBlocks(node ast.Node, callback func(*ast.FencedCodeBlock)) {
+	switch node := node.(type) {
+	case *ast.FencedCodeBlock:
+		callback(node)
+
+	default:
+		child := node.FirstChild()
+		for child != nil {
+			findFencedCodeBlocks(child, callback)
+			child = child.NextSibling()
+		}
+	}
+}
