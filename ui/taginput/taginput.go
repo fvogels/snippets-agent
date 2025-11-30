@@ -29,7 +29,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 	switch message := message.(type) {
 	case MsgAddCharacter:
 		model.inProgress += message.Character
-		return model, nil
+		return model, signal(MsgInputChanged{})
 
 	case MsgClearSingle:
 		if len(model.inProgress) > 0 {
@@ -52,8 +52,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 	case MsgAddTag:
 		model.completedTags = append(model.completedTags, model.inProgress)
 		model.inProgress = ""
-		command := model.signalSelectedTagsChanged()
-		return model, command
+		return model, signal(MsgSelectedTagsChanged{})
 	}
 
 	return model, nil
@@ -78,7 +77,7 @@ func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {
 		model.inProgress = model.inProgress[:len(model.inProgress)-1]
 	}
 
-	return nil
+	return signal(MsgInputChanged{})
 }
 
 func (model *Model) clearInProgress() tea.Cmd {
@@ -89,7 +88,7 @@ func (model *Model) clearInProgress() tea.Cmd {
 func (model *Model) dropLastCompletedTag() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = model.completedTags[:len(model.completedTags)-1]
-		return model.signalSelectedTagsChanged()
+		return signal(MsgSelectedTagsChanged{})
 	}
 
 	return nil
@@ -98,15 +97,15 @@ func (model *Model) dropLastCompletedTag() tea.Cmd {
 func (model *Model) clearCompletedTags() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = nil
-		return model.signalSelectedTagsChanged()
+		return signal(MsgSelectedTagsChanged{})
 	}
 
 	return nil
 }
 
-func (model *Model) signalSelectedTagsChanged() tea.Cmd {
+func signal(message tea.Msg) tea.Cmd {
 	return func() tea.Msg {
-		return SelectedTagsChangedMessage{}
+		return message
 	}
 }
 
@@ -114,4 +113,10 @@ func (model *Model) GetTags() []string {
 	return model.completedTags
 }
 
-type SelectedTagsChangedMessage struct{}
+func (model *Model) GetPartiallyInputtedTag() string {
+	return model.inProgress
+}
+
+type MsgSelectedTagsChanged struct{}
+
+type MsgInputChanged struct{}
