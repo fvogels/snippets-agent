@@ -9,11 +9,13 @@ import (
 )
 
 type Model struct {
+	entries    []*data.Entry
 	stringList stringlist.Model
 }
 
 func New() Model {
 	return Model{
+		entries:    nil,
 		stringList: stringlist.New(true),
 	}
 }
@@ -33,6 +35,7 @@ func (model Model) View() string {
 }
 
 func (model *Model) SetEntries(entries []*data.Entry) {
+	model.entries = entries
 	titles := util.Map(entries, func(entry *data.Entry) string { return entry.Title })
 	model.stringList.SetStrings(titles)
 }
@@ -43,4 +46,9 @@ func (model *Model) SetWidth(width int) {
 
 func (model *Model) SetMaximumHeight(height int) {
 	model.stringList.SetMaximumHeight(height)
+}
+
+func (model *Model) GetSelectedEntry() *data.Entry {
+	index := model.stringList.GetSelectedIndex()
+	return model.entries[index]
 }
