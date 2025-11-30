@@ -45,3 +45,7 @@ func (model *Model) SetWidth(width int) {
 func (model *Model) SetMaximumHeight(height int) {
 	model.stringList.SetMaximumHeight(height)
 }
+
+func (model *Model) SetFilter(filter func(tag string) bool) {
+	model.stringList.SetFilter(filter)
+}
