@@ -106,8 +106,8 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model, command
 
 		case "enter":
-			model.updateMarkdown()
-			return model, nil
+			command := model.rerenderMarkdownInBackground()
+			return model, command
 
 		default:
 			updatedTagInput, command := model.tagInput.Update(message)
@@ -122,8 +122,8 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.tagList.SetMaximumHeight(model.screenHeight - 1)
 		model.entryList.SetWidth(model.screenWidth - 20)
 		model.entryList.SetMaximumHeight(model.screenHeight - 1)
-		model.updateMarkdown()
-		return model, nil
+		command := model.rerenderMarkdownInBackground()
+		return model, command
 
 	case taginput.MsgSelectedTagsChanged:
 		model.recomputeCompatibleTagsAndEntries()
@@ -134,6 +134,10 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case taginput.MsgInputChanged:
 		model.updateTagListFilter()
 		model.refreshTagList()
+		return model, nil
+
+	case MsgMarkdownRendered:
+		model.renderedMarkdown = message.renderedMarkdown
 		return model, nil
 	}
 
@@ -177,26 +181,36 @@ func (model *Model) updateTagListFilter() {
 	})
 }
 
-func (model *Model) updateMarkdown() {
+func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
 	entry := model.entryList.GetSelectedEntry()
-	source, err := entry.LoadSource()
-	if err != nil {
-		panic("failed to load markdown file")
-	}
+	renderWidth := model.screenWidth - 20
 
-	renderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(model.screenWidth-20),
-	)
-	if err != nil {
-		panic("failed to create markdown renderer")
-	}
-	renderedMarkdown, err := renderer.Render(source)
-	if err != nil {
-		panic("failed to render markdown file")
-	}
+	return func() tea.Msg {
+		source, err := entry.LoadSource()
+		if err != nil {
+			panic("failed to load markdown file")
+		}
 
-	model.renderedMarkdown = renderedMarkdown
+		renderer, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(renderWidth),
+		)
+		if err != nil {
+			panic("failed to create markdown renderer")
+		}
+		renderedMarkdown, err := renderer.Render(source)
+		if err != nil {
+			panic("failed to render markdown file")
+		}
+
+		return MsgMarkdownRendered{
+			renderedMarkdown: renderedMarkdown,
+		}
+	}
+}
+
+type MsgMarkdownRendered struct {
+	renderedMarkdown string
 }
 
 func Start(configuration *configuration.Configuration) error {
