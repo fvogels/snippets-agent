@@ -9,6 +9,7 @@ import (
 
 type Configuration struct {
 	DataRoot string
+	KeepLog  bool
 }
 
 func GetPath() (string, error) {

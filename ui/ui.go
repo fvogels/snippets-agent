@@ -214,14 +214,16 @@ type MsgMarkdownRendered struct {
 }
 
 func Start(configuration *configuration.Configuration) error {
-	logFile, err := os.Create("ui.log")
-	if err != nil {
-		fmt.Println("Failed to create log")
-	}
-	defer logFile.Close()
+	if configuration.KeepLog {
+		logFile, err := os.Create("ui.log")
+		if err != nil {
+			fmt.Println("Failed to create log")
+		}
+		defer logFile.Close()
 
-	logger := slog.New(slog.NewTextHandler(logFile, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	slog.SetDefault(logger)
+		logger := slog.New(slog.NewTextHandler(logFile, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		slog.SetDefault(logger)
+	}
 
 	repository, err := data.LoadRepository(configuration.DataRoot)
 	if err != nil {
