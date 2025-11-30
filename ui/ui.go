@@ -106,7 +106,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model, command
 
 		case "enter":
-			model.showSelectedEntry()
+			model.updateMarkdown()
 			return model, nil
 
 		default:
@@ -122,6 +122,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.tagList.SetMaximumHeight(model.screenHeight - 1)
 		model.entryList.SetWidth(model.screenWidth - 20)
 		model.entryList.SetMaximumHeight(model.screenHeight - 1)
+		model.updateMarkdown()
 		return model, nil
 
 	case taginput.MsgSelectedTagsChanged:
@@ -176,14 +177,21 @@ func (model *Model) updateTagListFilter() {
 	})
 }
 
-func (model *Model) showSelectedEntry() {
+func (model *Model) updateMarkdown() {
 	entry := model.entryList.GetSelectedEntry()
 	source, err := entry.LoadSource()
 	if err != nil {
 		panic("failed to load markdown file")
 	}
 
-	renderedMarkdown, err := glamour.Render(source, "dark")
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(model.screenWidth-20),
+	)
+	if err != nil {
+		panic("failed to create markdown renderer")
+	}
+	renderedMarkdown, err := renderer.Render(source)
 	if err != nil {
 		panic("failed to render markdown file")
 	}
