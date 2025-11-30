@@ -4,6 +4,7 @@ import (
 	"code-snippets/ui/stringlist"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
@@ -11,9 +12,15 @@ type Model struct {
 }
 
 func New() Model {
-	return Model{
+	model := Model{
 		stringList: stringlist.New(false),
 	}
+
+	emptyListMessageStyle := lipgloss.NewStyle().Italic(true)
+	emptyListMessage := emptyListMessageStyle.Render("no tags found")
+	model.stringList.SetEmptyListMessage(emptyListMessage)
+
+	return model
 }
 
 func (model Model) Init() tea.Cmd {
