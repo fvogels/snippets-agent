@@ -7,19 +7,26 @@ import (
 	"code-snippets/ui/taginput"
 	"code-snippets/ui/taglist"
 	"code-snippets/util"
+	"fmt"
+	"log/slog"
+	"os"
 	"slices"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
-	repository   data.Repository
-	screenWidth  int
-	screenHeight int
-	tagList      taglist.Model
-	entryList    entrylist.Model
-	tagInput     taginput.Model
+	repository        data.Repository
+	screenWidth       int
+	screenHeight      int
+	compatibleTags    []string
+	compatibleEntries []*data.Entry
+
+	tagList   taglist.Model
+	entryList entrylist.Model
+	tagInput  taginput.Model
 }
 
 func New(repository data.Repository) tea.Model {
@@ -32,7 +39,9 @@ func New(repository data.Repository) tea.Model {
 		tagInput:     taginput.New(),
 	}
 
-	model.refreshLists()
+	model.recomputeCompatibleTagsAndEntries()
+	model.refreshTagList()
+	model.refreshEntryList()
 
 	return model
 }
@@ -105,15 +114,21 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.entryList.SetMaximumHeight(model.screenHeight - 1)
 		return model, nil
 
-	case taginput.SelectedTagsChangedMessage:
-		model.refreshLists()
+	case taginput.MsgSelectedTagsChanged:
+		model.recomputeCompatibleTagsAndEntries()
+		model.refreshTagList()
+		model.refreshEntryList()
+		return model, nil
+
+	case taginput.MsgInputChanged:
+		model.refreshTagList()
 		return model, nil
 	}
 
 	return model, nil
 }
 
-func (model *Model) refreshLists() {
+func (model *Model) recomputeCompatibleTagsAndEntries() {
 	selectedTags := util.NewSetFromSlice(model.tagInput.GetTags())
 	entries := []*data.Entry{}
 
@@ -122,7 +137,7 @@ func (model *Model) refreshLists() {
 		return nil
 	})
 
-	model.entryList.SetEntries(entries)
+	model.compatibleEntries = entries
 
 	remainingTags := util.NewSet[string]()
 	model.repository.EnumerateEntries(selectedTags, func(entry *data.Entry) error {
@@ -133,10 +148,38 @@ func (model *Model) refreshLists() {
 	sortedRemainingTags := remainingTags.ToSlice()
 	slices.Sort(sortedRemainingTags)
 
-	model.tagList.SetTags(sortedRemainingTags)
+	model.compatibleTags = sortedRemainingTags
+}
+
+func (model *Model) refreshTagList() {
+	shownTags := []string{}
+	partiallyInputtedTag := model.tagInput.GetPartiallyInputtedTag()
+
+	slog.Debug("Refreshing tag list", slog.String("partial input", partiallyInputtedTag))
+
+	for _, tag := range model.compatibleTags {
+		if strings.Contains(tag, partiallyInputtedTag) {
+			shownTags = append(shownTags, tag)
+		}
+	}
+
+	model.tagList.SetTags(shownTags)
+}
+
+func (model *Model) refreshEntryList() {
+	model.entryList.SetEntries(model.compatibleEntries)
 }
 
 func Start(configuration *configuration.Configuration) error {
+	logFile, err := os.Create("ui.log")
+	if err != nil {
+		fmt.Println("Failed to create log")
+	}
+	defer logFile.Close()
+
+	logger := slog.New(slog.NewTextHandler(logFile, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	slog.SetDefault(logger)
+
 	repository, err := data.LoadRepository(configuration.DataRoot)
 	if err != nil {
 		return err
