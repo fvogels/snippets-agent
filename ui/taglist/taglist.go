@@ -34,6 +34,10 @@ func (model *Model) SetTags(tags []string) {
 	model.stringList.SetStrings(tags)
 }
 
+func (model *Model) GetTags() []string {
+	return model.stringList.GetStrings()
+}
+
 func (model *Model) SetWidth(width int) {
 	model.stringList.SetWidth(width)
 }
