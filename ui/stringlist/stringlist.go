@@ -77,6 +77,10 @@ func (model Model) View() string {
 	return lipgloss.JoinVertical(0, lines...)
 }
 
+func (model *Model) GetStrings() []string {
+	return model.strings
+}
+
 func (model *Model) SetStrings(strings []string) {
 	model.strings = strings
 }
