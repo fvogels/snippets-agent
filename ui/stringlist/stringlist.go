@@ -131,3 +131,15 @@ func (model *Model) ensureSelectedIsVisible() {
 func (model *Model) SetEmptyListMessage(message string) {
 	model.emptyListMessage = message
 }
+
+func (model *Model) GetSelectedItem() string {
+	return model.filteredItems[model.GetSelectedIndex()]
+}
+
+func (model *Model) GetSelectedIndex() int {
+	if model.selectedIndex == -1 {
+		panic("selecting is not enabled")
+	}
+
+	return model.selectedIndex
+}
