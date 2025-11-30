@@ -13,6 +13,7 @@ func NewMarkdownCommand() *cobra.Command {
 
 	command.AddCommand(NewExtractAstCommand())
 	command.AddCommand(NewExtractMarkdownMetadataCommand())
+	command.AddCommand(NewExtractMarkdownFencedCodeBlocksCommand())
 
 	return &command
 }

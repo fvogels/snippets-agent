@@ -108,16 +108,18 @@ func convert(node ast.Node, markdown []byte) any {
 
 	case *ast.FencedCodeBlock:
 		return &struct {
-			AstNode `yaml:",inline"`
-			Info    any
-			Lines   string
+			AstNode  `yaml:",inline"`
+			Info     any
+			Language string
+			Lines    string
 		}{
 			AstNode: AstNode{
 				TypeName: typeName,
 				Children: children,
 			},
-			Info:  convert(node.Info, markdown),
-			Lines: string(node.Lines().Value(markdown)),
+			Info:     convert(node.Info, markdown),
+			Language: string(node.Language(markdown)),
+			Lines:    string(node.Lines().Value(markdown)),
 		}
 
 	default:
