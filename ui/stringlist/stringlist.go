@@ -1,25 +1,30 @@
 package stringlist
 
 import (
+	"code-snippets/util"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
-	strings           []string
+	items             []string
+	filteredItems     []string
 	firstVisibleIndex int
 	selectedIndex     int
 	width             int
 	maximumHeight     int
+	filter            func(item string) bool
 }
 
 func New(allowSelection bool) Model {
 	model := Model{
-		strings:           nil,
+		items:             nil,
 		firstVisibleIndex: 0,
 		selectedIndex:     0,
 		width:             0,
 		maximumHeight:     0,
+		filter:            func(item string) bool { return true },
 	}
 
 	if !allowSelection {
@@ -43,7 +48,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 		return model, nil
 
 	case MsgSelectNext:
-		if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.strings) {
+		if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.items) {
 			model.selectedIndex++
 		}
 		model.ensureSelectedIsVisible()
@@ -54,7 +59,9 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	if len(model.strings) == 0 {
+	itemsToBeShown := model.filteredItems
+
+	if len(itemsToBeShown) == 0 {
 		return ""
 	}
 
@@ -63,9 +70,9 @@ func (model Model) View() string {
 	rowIndex := 0
 	var lines []string
 
-	for rowIndex < model.maximumHeight && model.firstVisibleIndex+rowIndex < len(model.strings) {
+	for rowIndex < model.maximumHeight && model.firstVisibleIndex+rowIndex < len(itemsToBeShown) {
 		itemIndex := model.firstVisibleIndex + rowIndex
-		item := model.strings[itemIndex]
+		item := itemsToBeShown[itemIndex]
 
 		var line string
 		if itemIndex == model.selectedIndex {
@@ -82,13 +89,23 @@ func (model Model) View() string {
 }
 
 func (model *Model) GetStrings() []string {
-	return model.strings
+	return model.items
 }
 
 func (model *Model) SetStrings(strings []string) {
-	model.strings = strings
-	model.firstVisibleIndex = 0
+	model.items = strings
+	model.refresh()
+}
 
+func (model *Model) SetFilter(filter func(item string) bool) {
+	model.filter = filter
+	model.refresh()
+}
+
+func (model *Model) refresh() {
+	model.filteredItems = util.Filter(model.items, model.filter)
+
+	model.firstVisibleIndex = 0
 	if model.selectedIndex >= 0 {
 		model.selectedIndex = 0
 	}
