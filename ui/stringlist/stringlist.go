@@ -78,7 +78,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model Model) View() string {
 	itemsToBeShown := model.filteredItems
-	slog.Debug("stringlist.View", "nitems", len(itemsToBeShown), "height", model.maximumHeight)
+	slog.Debug("stringlist.View", "nitems", len(itemsToBeShown), "width", model.width, "height", model.maximumHeight)
 
 	if len(itemsToBeShown) == 0 {
 		return model.emptyListMessage
