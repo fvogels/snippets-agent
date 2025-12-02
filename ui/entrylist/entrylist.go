@@ -24,7 +24,7 @@ func (model Model) Init() tea.Cmd {
 	return model.stringList.Init()
 }
 
-func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
+func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case MsgSetEntries:
 		updatedEntries := message.Entries
