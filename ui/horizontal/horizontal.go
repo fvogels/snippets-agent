@@ -36,12 +36,12 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 		commands := []tea.Cmd{}
 
-		for _, child := range model.children {
+		for index, child := range model.children {
 			updatedChild, command := child.model.Update(tea.WindowSizeMsg{
 				Width:  child.widthFunction(model.size),
 				Height: message.Height,
 			})
-			child.model = updatedChild
+			model.children[index].model = updatedChild
 			commands = append(commands, command)
 		}
 
