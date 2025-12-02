@@ -6,11 +6,13 @@ import (
 	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
 	entries    []*data.Entry
 	stringList tea.Model
+	size       util.Size
 }
 
 func New() Model {
@@ -38,7 +40,11 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, command
 
 	case tea.WindowSizeMsg:
-		updatedStringList, command := model.stringList.Update(message)
+		model.size = util.Size{Width: message.Width, Height: message.Height}
+		updatedStringList, command := model.stringList.Update(tea.WindowSizeMsg{
+			Width:  message.Width - 2,
+			Height: message.Height - 2,
+		})
 		model.stringList = updatedStringList
 		return model, command
 
@@ -50,5 +56,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	return model.stringList.View()
+	// Note that the border is drawn outside the given width and height, so we need to decrease them by 2 to compensate
+	style := lipgloss.NewStyle().Width(model.size.Width-2).Height(model.size.Height-2).Border(lipgloss.DoubleBorder(), true).Padding(0)
+	return style.Render(model.stringList.View())
 }
