@@ -112,7 +112,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			return model, nil
 
 		default:
-			return model.root.Update(message)
+			updatedRoot, command := model.root.Update(message)
+			model.root = updatedRoot
+			return model, command
 		}
 
 	case tea.WindowSizeMsg:
