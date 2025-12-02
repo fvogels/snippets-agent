@@ -1,6 +1,8 @@
 package taginput
 
 import (
+	"log/slog"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -17,7 +19,7 @@ func New() Model {
 		completedTags:     nil,
 		inProgress:        "",
 		completedTagStyle: lipgloss.NewStyle().Background(lipgloss.Color("#AAFFAA")),
-		inProgressStyle:   lipgloss.NewStyle(),
+		inProgressStyle:   lipgloss.NewStyle().Background(lipgloss.Color("#AAAAFF")),
 	}
 }
 
@@ -25,11 +27,12 @@ func (model Model) Init() tea.Cmd {
 	return nil
 }
 
-func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
+func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case MsgAddCharacter:
 		model.inProgress += message.Character
-		return model, signal(MsgInputChanged{})
+		slog.Debug("updated tag input", "input", model.inProgress)
+		return model, model.signalInputChanged()
 
 	case MsgClearSingle:
 		if len(model.inProgress) > 0 {
@@ -52,7 +55,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 	case MsgAddTag:
 		model.completedTags = append(model.completedTags, model.inProgress)
 		model.inProgress = ""
-		return model, signal(MsgSelectedTagsChanged{})
+		return model, model.signalSelectedTagsChanged()
 	}
 
 	return model, nil
@@ -77,18 +80,18 @@ func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {
 		model.inProgress = model.inProgress[:len(model.inProgress)-1]
 	}
 
-	return signal(MsgInputChanged{})
+	return model.signalInputChanged()
 }
 
 func (model *Model) clearInProgress() tea.Cmd {
 	model.inProgress = ""
-	return nil
+	return model.signalInputChanged()
 }
 
 func (model *Model) dropLastCompletedTag() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = model.completedTags[:len(model.completedTags)-1]
-		return signal(MsgSelectedTagsChanged{})
+		return model.signalSelectedTagsChanged()
 	}
 
 	return nil
@@ -97,7 +100,7 @@ func (model *Model) dropLastCompletedTag() tea.Cmd {
 func (model *Model) clearCompletedTags() tea.Cmd {
 	if len(model.completedTags) > 0 {
 		model.completedTags = nil
-		return signal(MsgSelectedTagsChanged{})
+		return model.signalSelectedTagsChanged()
 	}
 
 	return nil
@@ -109,6 +112,18 @@ func signal(message tea.Msg) tea.Cmd {
 	}
 }
 
+func (model *Model) signalSelectedTagsChanged() tea.Cmd {
+	return signal(MsgSelectedTagsChanged{
+		SelectedTags: model.completedTags,
+	})
+}
+
+func (model *Model) signalInputChanged() tea.Cmd {
+	return signal(MsgInputChanged{
+		Input: model.inProgress,
+	})
+}
+
 func (model *Model) GetTags() []string {
 	return model.completedTags
 }
@@ -116,7 +131,3 @@ func (model *Model) GetTags() []string {
 func (model *Model) GetPartiallyInputtedTag() string {
 	return model.inProgress
 }
-
-type MsgSelectedTagsChanged struct{}
-
-type MsgInputChanged struct{}

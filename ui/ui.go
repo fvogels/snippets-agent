@@ -6,146 +6,154 @@ import (
 	"code-snippets/ui/entrylist"
 	"code-snippets/ui/taginput"
 	"code-snippets/ui/taglist"
+	"code-snippets/ui/vertical"
 	"code-snippets/util"
 	"fmt"
 	"log/slog"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/lipgloss"
+	"golang.design/x/clipboard"
 )
 
 type Model struct {
-	repository        data.Repository
-	screenWidth       int
-	screenHeight      int
-	compatibleTags    []string
-	compatibleEntries []*data.Entry
-	renderedMarkdown  string
-
-	tagList   taglist.Model
-	entryList entrylist.Model
-	tagInput  taginput.Model
+	repository           data.Repository
+	screenWidth          int
+	screenHeight         int
+	compatibleTags       []string
+	compatibleEntries    []*data.Entry
+	renderedMarkdown     string
+	partiallyInputtedTag string
+	root                 tea.Model
 }
 
 func New(repository data.Repository) tea.Model {
+	root := vertical.New()
+
+	root.Add(func(size util.Size) int { return size.Height - 1 }, taglist.New())
+	root.Add(func(size util.Size) int { return 1 }, taginput.New())
+
 	model := Model{
 		repository:   repository,
 		screenWidth:  0,
 		screenHeight: 0,
-		tagList:      taglist.New(),
-		entryList:    entrylist.New(),
-		tagInput:     taginput.New(),
+		root:         root,
 	}
 
-	model.recomputeCompatibleTagsAndEntries()
-	model.refreshTagList()
-	model.refreshEntryList()
+	model.recomputeCompatibleTagsAndEntries([]string{})
 
 	return model
 }
 
 func (model Model) Init() tea.Cmd {
-	return nil
-}
+	slog.Debug("Initializing ui")
 
-func (model Model) View() string {
-	return lipgloss.JoinVertical(
-		0,
-		lipgloss.JoinHorizontal(
-			0,
-			lipgloss.NewStyle().Width(20).Height(model.screenHeight-1).Render(model.tagList.View()),
-			lipgloss.JoinVertical(
-				0,
-				lipgloss.NewStyle().Height(20).Render(model.entryList.View()),
-				lipgloss.NewStyle().Height(model.screenHeight-21).Render(model.renderedMarkdown),
-			),
-		),
-		model.tagInput.View(),
+	return tea.Batch(
+		model.signalRefreshTagList(),
+		model.signalRefreshEntryList(),
 	)
 }
 
+func (model Model) View() string {
+	return model.root.View()
+}
+
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	slog.Debug("ui received message", slog.String("type", reflect.TypeOf(message).String()))
+
 	switch message := message.(type) {
 	case tea.KeyMsg:
 		switch message.String() {
-		case "ctrl+c":
+		case "esc":
 			return model, tea.Quit
 
 		case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
-			updatedTagInput, command := model.tagInput.Update(taginput.MsgAddCharacter{Character: message.String()})
-			model.tagInput = updatedTagInput
-			return model, command
+			return model, func() tea.Msg {
+				return taginput.MsgAddCharacter{Character: message.String()}
+			}
 
 		case "backspace":
-			updatedTagInput, command := model.tagInput.Update(taginput.MsgClearSingle{})
-			model.tagInput = updatedTagInput
-			return model, command
+			return model, func() tea.Msg {
+				return taginput.MsgClearSingle{}
+			}
 
 		case "ctrl+w":
-			updatedTagInput, command := model.tagInput.Update(taginput.MsgClearAll{})
-			model.tagInput = updatedTagInput
-			return model, command
+			return model, func() tea.Msg {
+				return taginput.MsgClearAll{}
+			}
 
 		case " ":
-			updatedTagInput, command := model.tagInput.Update(taginput.MsgAddTag{})
-			model.tagInput = updatedTagInput
-			return model, command
+			return model, func() tea.Msg {
+				return taginput.MsgAddTag{}
+			}
 
 		case "down":
-			updatedEntryList, command := model.entryList.Update(entrylist.MsgSelectNext{})
-			model.entryList = updatedEntryList
-			return model, command
+			return model, func() tea.Msg {
+				return entrylist.MsgSelectNext{}
+			}
 
 		case "up":
-			updatedEntryList, command := model.entryList.Update(entrylist.MsgSelectPrevious{})
-			model.entryList = updatedEntryList
-			return model, command
+			return model, func() tea.Msg {
+				return entrylist.MsgSelectPrevious{}
+			}
 
 		case "enter":
 			command := model.rerenderMarkdownInBackground()
 			return model, command
 
+		case "ctrl+c":
+			model.copyCodeblockToClipboard()
+			return model, nil
+
 		default:
-			updatedTagInput, command := model.tagInput.Update(message)
-			model.tagInput = updatedTagInput
-			return model, command
+			return model.root.Update(message)
 		}
 
 	case tea.WindowSizeMsg:
+		slog.Debug("ui resized", "width", message.Width, "height", message.Height)
 		model.screenWidth = message.Width
 		model.screenHeight = message.Height
-		model.tagList.SetWidth(20)
-		model.tagList.SetMaximumHeight(model.screenHeight - 1)
-		model.entryList.SetWidth(model.screenWidth - 20)
-		model.entryList.SetMaximumHeight(model.screenHeight - 1)
-		command := model.rerenderMarkdownInBackground()
-		return model, command
+
+		updatedRoot, rootCommand := model.root.Update(message)
+		model.root = updatedRoot
+		markdownCommand := model.rerenderMarkdownInBackground()
+		return model, tea.Batch(rootCommand, markdownCommand)
 
 	case taginput.MsgSelectedTagsChanged:
-		model.recomputeCompatibleTagsAndEntries()
-		model.refreshTagList()
-		model.refreshEntryList()
-		return model, nil
+		return model.onSelectedTagsChanged(message.SelectedTags)
 
 	case taginput.MsgInputChanged:
-		model.updateTagListFilter()
-		model.refreshTagList()
-		return model, nil
+		model.partiallyInputtedTag = message.Input
+		return model, tea.Batch(
+			model.signalUpdateTagListFilter(),
+			model.signalRefreshTagList(),
+		)
 
 	case MsgMarkdownRendered:
 		model.renderedMarkdown = message.renderedMarkdown
 		return model, nil
-	}
 
-	return model, nil
+	default:
+		updatedRoot, command := model.root.Update(message)
+		model.root = updatedRoot
+		return model, command
+	}
 }
 
-func (model *Model) recomputeCompatibleTagsAndEntries() {
-	selectedTags := util.NewSetFromSlice(model.tagInput.GetTags())
+func (model Model) onSelectedTagsChanged(updatedSelectedTags []string) (tea.Model, tea.Cmd) {
+	model.recomputeCompatibleTagsAndEntries(updatedSelectedTags)
+
+	return model, tea.Batch(
+		model.signalRefreshTagList(),
+		model.signalRefreshEntryList(),
+	)
+}
+
+func (model *Model) recomputeCompatibleTagsAndEntries(updatedSelectedTags []string) {
+	selectedTags := util.NewSetFromSlice(updatedSelectedTags)
 	entries := []*data.Entry{}
 
 	model.repository.EnumerateEntries(selectedTags, func(entry *data.Entry) error {
@@ -167,46 +175,79 @@ func (model *Model) recomputeCompatibleTagsAndEntries() {
 	model.compatibleTags = sortedRemainingTags
 }
 
-func (model *Model) refreshTagList() {
-	model.tagList.SetTags(model.compatibleTags)
+func (model *Model) signalRefreshTagList() tea.Cmd {
+	// TODO model.compatibleTags should be copied into a separate array first
+	return func() tea.Msg {
+		slog.Debug("Sending MsgSetTags")
+
+		return taglist.MsgSetTags{
+			Tags: model.compatibleTags,
+		}
+	}
 }
 
-func (model *Model) refreshEntryList() {
-	model.entryList.SetEntries(model.compatibleEntries)
+func (model *Model) signalRefreshEntryList() tea.Cmd {
+	return func() tea.Msg {
+		slog.Debug("Sending MsgSetEntries")
+
+		return entrylist.MsgSetEntries{
+			Entries: model.compatibleEntries,
+		}
+	}
 }
 
-func (model *Model) updateTagListFilter() {
-	model.tagList.SetFilter(func(tag string) bool {
-		return strings.Contains(tag, model.tagInput.GetPartiallyInputtedTag())
-	})
+func (model *Model) signalUpdateTagListFilter() tea.Cmd {
+	return func() tea.Msg {
+		return taglist.MsgSetFilter{
+			Predicate: func(tag string) bool {
+				return strings.Contains(tag, model.partiallyInputtedTag)
+			},
+		}
+	}
 }
 
 func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
-	entry := model.entryList.GetSelectedEntry()
-	renderWidth := model.screenWidth - 20
+	return nil
+	// entry := model.entryList.GetSelectedEntry()
+	// renderWidth := model.screenWidth - 20
 
-	return func() tea.Msg {
-		source, err := entry.LoadSource()
-		if err != nil {
-			panic("failed to load markdown file")
-		}
+	// return func() tea.Msg {
+	// 	source, err := entry.GetSource()
+	// 	if err != nil {
+	// 		panic("failed to load markdown file")
+	// 	}
 
-		renderer, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(renderWidth),
-		)
-		if err != nil {
-			panic("failed to create markdown renderer")
-		}
-		renderedMarkdown, err := renderer.Render(source)
-		if err != nil {
-			panic("failed to render markdown file")
-		}
+	// 	renderer, err := glamour.NewTermRenderer(
+	// 		glamour.WithAutoStyle(),
+	// 		glamour.WithWordWrap(renderWidth),
+	// 	)
+	// 	if err != nil {
+	// 		panic("failed to create markdown renderer")
+	// 	}
+	// 	renderedMarkdown, err := renderer.Render(source)
+	// 	if err != nil {
+	// 		panic("failed to render markdown file")
+	// 	}
 
-		return MsgMarkdownRendered{
-			renderedMarkdown: renderedMarkdown,
-		}
-	}
+	// 	return MsgMarkdownRendered{
+	// 		renderedMarkdown: renderedMarkdown,
+	// 	}
+	// }
+}
+
+func (model *Model) copyCodeblockToClipboard() {
+	// entry := model.entryList.GetSelectedEntry()
+	// codeBlocks, err := entry.GetCodeBlocks()
+	// if err != nil {
+	// 	panic("failed to get code blocks from markdown file")
+	// }
+
+	// if len(codeBlocks) == 0 {
+	// 	panic("no code block")
+	// }
+
+	// content := codeBlocks[0].Content
+	// clipboard.Write(clipboard.FmtText, content)
 }
 
 type MsgMarkdownRendered struct {
@@ -214,6 +255,11 @@ type MsgMarkdownRendered struct {
 }
 
 func Start(configuration *configuration.Configuration) error {
+	err := clipboard.Init()
+	if err != nil {
+		return err
+	}
+
 	if configuration.KeepLog {
 		logFile, err := os.Create("ui.log")
 		if err != nil {

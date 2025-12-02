@@ -21,3 +21,9 @@ func Filter[T any](xs []T, predicate func(t T) bool) []T {
 
 	return result
 }
+
+func Compose[T, U, R any](f func(T) U, g func(U) R) func(T) R {
+	return func(t T) R {
+		return g(f(t))
+	}
+}

@@ -2,6 +2,7 @@ package stringlist
 
 import (
 	"code-snippets/util"
+	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -39,8 +40,8 @@ func (model Model) Init() tea.Cmd {
 	return nil
 }
 
-func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
-	switch message.(type) {
+func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	switch message := message.(type) {
 	case MsgSelectPrevious:
 		if model.selectedIndex > 0 {
 			model.selectedIndex--
@@ -54,6 +55,22 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 		}
 		model.ensureSelectedIsVisible()
 		return model, nil
+
+	case tea.WindowSizeMsg:
+		slog.Debug("stringlist resized", "width", message.Width, "height", message.Height)
+		model.width = message.Width
+		model.maximumHeight = message.Height
+		return model, nil
+
+	case MsgSetFilter:
+		model.filter = message.Predicate
+		model.refresh()
+		return model, nil
+
+	case MsgSetItems:
+		model.items = message.Items
+		model.refresh()
+		return model, nil
 	}
 
 	return model, nil
@@ -61,6 +78,7 @@ func (model Model) Update(message tea.Msg) (Model, tea.Cmd) {
 
 func (model Model) View() string {
 	itemsToBeShown := model.filteredItems
+	slog.Debug("stringlist.View", "nitems", len(itemsToBeShown), "height", model.maximumHeight)
 
 	if len(itemsToBeShown) == 0 {
 		return model.emptyListMessage
@@ -89,20 +107,6 @@ func (model Model) View() string {
 	return lipgloss.JoinVertical(0, lines...)
 }
 
-func (model *Model) GetStrings() []string {
-	return model.items
-}
-
-func (model *Model) SetStrings(strings []string) {
-	model.items = strings
-	model.refresh()
-}
-
-func (model *Model) SetFilter(filter func(item string) bool) {
-	model.filter = filter
-	model.refresh()
-}
-
 func (model *Model) refresh() {
 	model.filteredItems = util.Filter(model.items, model.filter)
 
@@ -112,19 +116,16 @@ func (model *Model) refresh() {
 	}
 }
 
-func (model *Model) SetWidth(width int) {
-	model.width = width
-}
-
-func (model *Model) SetMaximumHeight(height int) {
-	model.maximumHeight = height
-}
-
 func (model *Model) ensureSelectedIsVisible() {
-	if model.firstVisibleIndex > model.selectedIndex {
-		model.firstVisibleIndex = model.selectedIndex
-	} else if model.firstVisibleIndex+model.maximumHeight < model.selectedIndex {
-		model.firstVisibleIndex = model.selectedIndex - model.maximumHeight + 1
+	if model.selectedIndex != -1 {
+		if model.firstVisibleIndex > model.selectedIndex {
+			model.firstVisibleIndex = model.selectedIndex
+		} else if model.firstVisibleIndex+model.maximumHeight < model.selectedIndex {
+			model.firstVisibleIndex = model.selectedIndex - model.maximumHeight + 1
+			if model.firstVisibleIndex < 0 {
+				model.firstVisibleIndex = 0
+			}
+		}
 	}
 }
 

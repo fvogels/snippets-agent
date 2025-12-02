@@ -46,13 +46,13 @@ type Entry struct {
 	Tags       util.Set[string] `json:"tags"`
 }
 
-func (entry *Entry) LoadSource() (string, error) {
-	data, err := os.ReadFile(entry.Path)
+func (entry *Entry) GetSource() (string, error) {
+	source, err := entry.loadSource()
 	if err != nil {
 		return "", err
 	}
 
-	contents := string(data)
+	contents := string(source)
 	lines := strings.Lines(contents)
 
 	contentsWithoutMetadata := []string{}
@@ -69,6 +69,27 @@ func (entry *Entry) LoadSource() (string, error) {
 	})
 
 	return strings.Join(contentsWithoutMetadata, ""), nil
+}
+
+func (entry *Entry) loadSource() ([]byte, error) {
+	data, err := os.ReadFile(entry.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (entry *Entry) GetCodeBlocks() ([]markdown.CodeBlock, error) {
+	source, err := entry.loadSource()
+	if err != nil {
+		return nil, err
+	}
+
+	ast, _ := markdown.Parse(source)
+	codeBlocks := markdown.ExtractCodeBlocks(source, ast)
+
+	return codeBlocks, nil
 }
 
 func ReadEntry(path string, identifier int) (*Entry, error) {

@@ -48,16 +48,16 @@ func ParseFile(path string) (*MarkdownFile, error) {
 }
 
 type CodeBlock struct {
-	Language string
-	Content  string
+	Language []byte
+	Content  []byte
 }
 
 func ExtractCodeBlocks(source []byte, node ast.Node) []CodeBlock {
 	result := []CodeBlock{}
 
 	findFencedCodeBlocks(node, func(fencedCodeBlock *ast.FencedCodeBlock) {
-		language := string(fencedCodeBlock.Language(source))
-		content := string(fencedCodeBlock.Lines().Value(source))
+		language := fencedCodeBlock.Language(source)
+		content := fencedCodeBlock.Lines().Value(source)
 		codeblock := CodeBlock{
 			Language: language,
 			Content:  content,
