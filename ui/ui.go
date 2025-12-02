@@ -32,8 +32,11 @@ type Model struct {
 }
 
 func New(repository data.Repository) tea.Model {
+	tagListWidth := 20
+
 	mainView := horizontal.New()
-	mainView.Add(func(size util.Size) int { return 20 }, taglist.New())
+	mainView.Add(func(size util.Size) int { return tagListWidth }, taglist.New())
+	mainView.Add(func(size util.Size) int { return size.Width - tagListWidth }, entrylist.New())
 
 	root := vertical.New()
 	root.Add(func(size util.Size) int { return size.Height - 1 }, mainView)
