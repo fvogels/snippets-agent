@@ -43,8 +43,8 @@ func (c *extractMarkdownFencedCodeBlocksCommand) execute(path string) error {
 	blocks := markdown.ExtractCodeBlocks(source, ast)
 
 	for index, block := range blocks {
-		fmt.Printf("Block %d: language %s\n", index, block.Language)
-		fmt.Println(block.Content)
+		fmt.Printf("Block %d: language %s\n", index, string(block.Language))
+		fmt.Println(string(block.Content))
 		fmt.Println()
 	}
 
