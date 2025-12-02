@@ -11,3 +11,8 @@ type MsgSelectNext struct{}
 type MsgSetFilter struct {
 	Predicate func(tag string) bool
 }
+
+type MsgItemSelected struct {
+	Index int
+	Item  string
+}

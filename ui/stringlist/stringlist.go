@@ -2,34 +2,35 @@ package stringlist
 
 import (
 	"code-snippets/util"
+	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
-	items             []string
-	filteredItems     []string
-	firstVisibleIndex int
-	selectedIndex     int
-	width             int
-	maximumHeight     int
-	filter            func(item string) bool
-	emptyListMessage  string
+	allowSelection     bool
+	items              []string
+	filteredItems      []string
+	firstVisibleIndex  int
+	selectedIndex      int
+	width              int
+	maximumHeight      int
+	filter             func(item string) bool
+	emptyListMessage   string
+	messageTransformer func(tea.Msg) tea.Msg
 }
 
 func New(allowSelection bool) Model {
 	model := Model{
-		items:             nil,
-		firstVisibleIndex: 0,
-		selectedIndex:     0,
-		width:             0,
-		maximumHeight:     0,
-		filter:            func(item string) bool { return true },
-	}
-
-	if !allowSelection {
-		model.selectedIndex = -1
+		allowSelection:     allowSelection,
+		items:              nil,
+		firstVisibleIndex:  0,
+		selectedIndex:      0,
+		width:              0,
+		maximumHeight:      0,
+		filter:             func(item string) bool { return true },
+		messageTransformer: func(m tea.Msg) tea.Msg { return m },
 	}
 
 	return model
@@ -44,18 +45,28 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case MsgSelectPrevious:
-		if model.selectedIndex > 0 {
-			model.selectedIndex--
+		if model.allowSelection {
+			if model.selectedIndex > 0 {
+				model.selectedIndex--
+			}
+			model.ensureSelectedIsVisible()
+
+			return model, model.signalItemSelected()
+		} else {
+			return model, nil
 		}
-		model.ensureSelectedIsVisible()
-		return model, nil
 
 	case MsgSelectNext:
-		if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.items) {
-			model.selectedIndex++
+		if model.allowSelection {
+			if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.items) {
+				model.selectedIndex++
+			}
+			model.ensureSelectedIsVisible()
+
+			return model, model.signalItemSelected()
+		} else {
+			return model, nil
 		}
-		model.ensureSelectedIsVisible()
-		return model, nil
 
 	case tea.WindowSizeMsg:
 		model.width = message.Width
@@ -76,6 +87,21 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
+func (model *Model) signalItemSelected() tea.Cmd {
+	selectedIndex := model.selectedIndex
+	selectedItem := model.items[selectedIndex]
+
+	return func() tea.Msg {
+		msg := MsgItemSelected{
+			Index: selectedIndex,
+			Item:  selectedItem,
+		}
+
+		slog.Debug("signaling item selection", "index", selectedIndex, "item", selectedItem)
+		return model.messageTransformer(msg)
+	}
+}
+
 func (model Model) View() string {
 	itemsToBeShown := model.filteredItems
 
@@ -93,7 +119,7 @@ func (model Model) View() string {
 		item := itemsToBeShown[itemIndex]
 
 		var line string
-		if itemIndex == model.selectedIndex {
+		if model.allowSelection && itemIndex == model.selectedIndex {
 			line = selectedItemStyle.Render(item)
 		} else {
 			line = itemStyle.Render(item)
@@ -116,7 +142,7 @@ func (model *Model) refresh() {
 }
 
 func (model *Model) ensureSelectedIsVisible() {
-	if model.selectedIndex != -1 {
+	if model.allowSelection {
 		if model.firstVisibleIndex > model.selectedIndex {
 			model.firstVisibleIndex = model.selectedIndex
 		} else if model.firstVisibleIndex+model.maximumHeight < model.selectedIndex {
@@ -142,4 +168,8 @@ func (model *Model) GetSelectedIndex() int {
 	}
 
 	return model.selectedIndex
+}
+
+func (model *Model) SetMessageTransformer(transformer func(tea.Msg) tea.Msg) {
+	model.messageTransformer = transformer
 }

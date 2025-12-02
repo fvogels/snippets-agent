@@ -29,8 +29,6 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	util.DebugShowMessage(message)
-
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
 		model.size.Width = message.Width

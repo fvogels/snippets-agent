@@ -5,6 +5,7 @@ import (
 	"code-snippets/data"
 	"code-snippets/ui/entrylist"
 	"code-snippets/ui/horizontal"
+	"code-snippets/ui/mdview"
 	"code-snippets/ui/taginput"
 	"code-snippets/ui/taglist"
 	"code-snippets/ui/vertical"
@@ -12,7 +13,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"reflect"
 	"slices"
 	"strings"
 
@@ -28,15 +28,23 @@ type Model struct {
 	compatibleEntries    []*data.Entry
 	renderedMarkdown     string
 	partiallyInputtedTag string
+	selectedEntry        *data.Entry
 	root                 tea.Model
 }
 
 func New(repository data.Repository) tea.Model {
+	util.DebugMilestone()
+
 	tagListWidth := 20
+	entryListHeight := 20
+
+	pane := vertical.New()
+	pane.Add(func(size util.Size) int { return entryListHeight }, entrylist.New())
+	pane.Add(func(size util.Size) int { return size.Height - entryListHeight }, mdview.New())
 
 	mainView := horizontal.New()
 	mainView.Add(func(size util.Size) int { return tagListWidth }, taglist.New())
-	mainView.Add(func(size util.Size) int { return size.Width - tagListWidth }, entrylist.New())
+	mainView.Add(func(size util.Size) int { return size.Width - tagListWidth }, pane)
 
 	root := vertical.New()
 	root.Add(func(size util.Size) int { return size.Height - 1 }, mainView)
@@ -51,11 +59,13 @@ func New(repository data.Repository) tea.Model {
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
 
+	util.DebugMilestone()
+
 	return model
 }
 
 func (model Model) Init() tea.Cmd {
-	slog.Debug("Initializing ui")
+	util.DebugMilestone()
 
 	return tea.Batch(
 		model.signalRefreshTagList(),
@@ -68,7 +78,7 @@ func (model Model) View() string {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	slog.Debug("ui received message", slog.String("type", reflect.TypeOf(message).String()))
+	util.DebugShowMessage(message)
 
 	switch message := message.(type) {
 	case tea.KeyMsg:
@@ -121,7 +131,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		slog.Debug("ui resized", "width", message.Width, "height", message.Height)
 		model.screenWidth = message.Width
 		model.screenHeight = message.Height
 
@@ -138,6 +147,10 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MsgMarkdownRendered:
 		model.renderedMarkdown = message.renderedMarkdown
+		return model, nil
+
+	case entrylist.MsgEntrySelected:
+		model.selectedEntry = message.Entry
 		return model, nil
 
 	default:
@@ -220,32 +233,23 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 }
 
 func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
-	return nil
-	// entry := model.entryList.GetSelectedEntry()
-	// renderWidth := model.screenWidth - 20
+	entry := model.selectedEntry
 
-	// return func() tea.Msg {
-	// 	source, err := entry.GetSource()
-	// 	if err != nil {
-	// 		panic("failed to load markdown file")
-	// 	}
+	if entry != nil {
+		return func() tea.Msg {
+			source, err := entry.GetSource()
+			if err != nil {
+				panic("failed to load markdown file")
+			}
 
-	// 	renderer, err := glamour.NewTermRenderer(
-	// 		glamour.WithAutoStyle(),
-	// 		glamour.WithWordWrap(renderWidth),
-	// 	)
-	// 	if err != nil {
-	// 		panic("failed to create markdown renderer")
-	// 	}
-	// 	renderedMarkdown, err := renderer.Render(source)
-	// 	if err != nil {
-	// 		panic("failed to render markdown file")
-	// 	}
-
-	// 	return MsgMarkdownRendered{
-	// 		renderedMarkdown: renderedMarkdown,
-	// 	}
-	// }
+			return mdview.MsgSetSource{
+				Source: source,
+			}
+		}
+	} else {
+		model.renderedMarkdown = ""
+		return nil
+	}
 }
 
 func (model *Model) copyCodeblockToClipboard() {
@@ -265,6 +269,10 @@ func (model *Model) copyCodeblockToClipboard() {
 
 type MsgMarkdownRendered struct {
 	renderedMarkdown string
+}
+
+type MsgEntryLoaded struct {
+	Source string
 }
 
 func Start(configuration *configuration.Configuration) error {

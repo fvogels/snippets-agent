@@ -10,9 +10,13 @@ import (
 )
 
 func DebugShowMessage(message tea.Msg) {
-	_, file, _, _ := runtime.Caller(1)
+	_, file, line, _ := runtime.Caller(1)
 
-	slog.Debug("message received", slog.String("file", file), slog.String("message", DebugMessageToString(message)))
+	slog.Debug(
+		"message received",
+		slog.String("location", fmt.Sprintf("%s:%d", file, line)),
+		slog.String("message", DebugMessageToString(message)),
+	)
 }
 
 func DebugMessageToString(message tea.Msg) string {
@@ -26,4 +30,13 @@ func DebugMessageToString(message tea.Msg) string {
 	default:
 		return reflect.TypeOf(message).String()
 	}
+}
+
+func DebugMilestone() {
+	_, file, line, _ := runtime.Caller(1)
+
+	slog.Debug(
+		"milestone reached",
+		slog.String("location", fmt.Sprintf("%s:%d", file, line)),
+	)
 }

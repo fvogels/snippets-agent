@@ -4,6 +4,7 @@ import (
 	"code-snippets/data"
 	"code-snippets/ui/stringlist"
 	"code-snippets/util"
+	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -16,9 +17,17 @@ type Model struct {
 }
 
 func New() Model {
+	stringList := stringlist.New(true)
+	stringList.SetMessageTransformer(func(message tea.Msg) tea.Msg {
+		slog.Debug("transforming message")
+		return msgStringListMessageWrapper{
+			message: message,
+		}
+	})
+
 	return Model{
 		entries:    nil,
-		stringList: stringlist.New(true),
+		stringList: stringList,
 	}
 }
 
@@ -27,6 +36,8 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	util.DebugShowMessage(message)
+
 	switch message := message.(type) {
 	case MsgSetEntries:
 		updatedEntries := message.Entries
@@ -47,6 +58,21 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		})
 		model.stringList = updatedStringList
 		return model, command
+
+	case msgStringListMessageWrapper:
+		switch message := message.message.(type) {
+		case stringlist.MsgItemSelected:
+			selectedEntry := model.entries[message.Index]
+			return model, func() tea.Msg {
+				return MsgEntrySelected{
+					Index: message.Index,
+					Entry: selectedEntry,
+				}
+			}
+
+		default:
+			return model, nil
+		}
 
 	default:
 		updatedStringList, command := model.stringList.Update(message)
