@@ -2,7 +2,6 @@ package stringlist
 
 import (
 	"code-snippets/util"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -41,6 +40,8 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	util.DebugShowMessage(message)
+
 	switch message := message.(type) {
 	case MsgSelectPrevious:
 		if model.selectedIndex > 0 {
@@ -57,7 +58,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 
 	case tea.WindowSizeMsg:
-		slog.Debug("stringlist resized", "width", message.Width, "height", message.Height)
 		model.width = message.Width
 		model.maximumHeight = message.Height
 		return model, nil
@@ -78,7 +78,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model Model) View() string {
 	itemsToBeShown := model.filteredItems
-	slog.Debug("stringlist.View", "nitems", len(itemsToBeShown), "width", model.width, "height", model.maximumHeight)
 
 	if len(itemsToBeShown) == 0 {
 		return model.emptyListMessage

@@ -2,6 +2,8 @@ package horizontal
 
 import (
 	"code-snippets/util"
+	"log/slog"
+	"reflect"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -29,6 +31,8 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+	slog.Debug("horizontal received message", slog.String("type", reflect.TypeOf(message).String()))
+
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
 		model.size.Width = message.Width
