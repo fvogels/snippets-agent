@@ -131,11 +131,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onSelectedTagsChanged(message.SelectedTags)
 
 	case taginput.MsgInputChanged:
-		model.partiallyInputtedTag = message.Input
-		return model, tea.Batch(
-			model.signalUpdateTagListFilter(),
-			model.signalRefreshTagList(),
-		)
+		return model.onPartiallyInputtedTagUpdate(message.Input)
 
 	case MsgMarkdownRendered:
 		model.renderedMarkdown = message.renderedMarkdown
@@ -154,6 +150,15 @@ func (model Model) onSelectedTagsChanged(updatedSelectedTags []string) (tea.Mode
 	return model, tea.Batch(
 		model.signalRefreshTagList(),
 		model.signalRefreshEntryList(),
+	)
+}
+
+func (model Model) onPartiallyInputtedTagUpdate(partiallyInputtedTag string) (tea.Model, tea.Cmd) {
+	model.partiallyInputtedTag = partiallyInputtedTag
+
+	return model, tea.Batch(
+		model.signalUpdateTagListFilter(),
+		model.signalRefreshTagList(),
 	)
 }
 
