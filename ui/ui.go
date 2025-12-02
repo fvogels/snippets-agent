@@ -4,6 +4,7 @@ import (
 	"code-snippets/configuration"
 	"code-snippets/data"
 	"code-snippets/ui/entrylist"
+	"code-snippets/ui/horizontal"
 	"code-snippets/ui/taginput"
 	"code-snippets/ui/taglist"
 	"code-snippets/ui/vertical"
@@ -31,9 +32,11 @@ type Model struct {
 }
 
 func New(repository data.Repository) tea.Model {
-	root := vertical.New()
+	mainView := horizontal.New()
+	mainView.Add(func(size util.Size) int { return 20 }, taglist.New())
 
-	root.Add(func(size util.Size) int { return size.Height - 1 }, taglist.New())
+	root := vertical.New()
+	root.Add(func(size util.Size) int { return size.Height - 1 }, mainView)
 	root.Add(func(size util.Size) int { return 1 }, taginput.New())
 
 	model := Model{

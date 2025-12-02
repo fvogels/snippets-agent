@@ -73,7 +73,7 @@ func (model Model) View() string {
 	return style.Render(lipgloss.JoinHorizontal(0, parts...))
 }
 
-func (model *Model) AddChild(widthFunction func(size util.Size) int, childModel tea.Model) {
+func (model *Model) Add(widthFunction func(size util.Size) int, childModel tea.Model) {
 	child := child{
 		widthFunction: widthFunction,
 		model:         childModel,
