@@ -12,6 +12,6 @@ type MsgInputChanged struct {
 
 type MsgReleaseFocus struct{}
 
-type MsgSetSuggesions struct {
-	Suggestions []string
+type MsgSetCandidates struct {
+	Candidates []string
 }

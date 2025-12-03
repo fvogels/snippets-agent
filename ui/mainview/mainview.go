@@ -160,7 +160,7 @@ func (model Model) onPartiallyInputtedTagUpdate(partiallyInputtedTag string) (te
 	return model, tea.Batch(
 		model.signalUpdateTagListFilter(),
 		model.signalRefreshTagList(),
-		model.signalTagInputSuggestions(),
+		model.signalTagInputCandidates(),
 	)
 }
 
@@ -210,12 +210,12 @@ func (model *Model) signalRefreshEntryList() tea.Cmd {
 	}
 }
 
-func (model *Model) signalTagInputSuggestions() tea.Cmd {
+func (model *Model) signalTagInputCandidates() tea.Cmd {
 	return func() tea.Msg {
 		return target.MsgTargetted{
 			Target: model.tagInputIdentifier,
-			Message: taginput.MsgSetSuggesions{
-				Suggestions: model.compatibleTags,
+			Message: taginput.MsgSetCandidates{
+				Candidates: model.compatibleTags,
 			},
 		}
 	}

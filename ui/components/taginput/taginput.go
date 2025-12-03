@@ -12,7 +12,7 @@ import (
 
 type Model struct {
 	completedTags     []string
-	suggestions       []string
+	candidateTags     []string
 	inProgress        string
 	completedTagStyle lipgloss.Style
 	inProgressStyle   lipgloss.Style
@@ -53,15 +53,15 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.BlurMsg:
 		return model.onBlur()
 
-	case MsgSetSuggesions:
-		return model.onSetSuggestions(message)
+	case MsgSetCandidates:
+		return model.onSetCandidates(message)
 	}
 
 	return model, nil
 }
 
-func (model Model) onSetSuggestions(message MsgSetSuggesions) (tea.Model, tea.Cmd) {
-	model.suggestions = message.Suggestions
+func (model Model) onSetCandidates(message MsgSetCandidates) (tea.Model, tea.Cmd) {
+	model.candidateTags = message.Candidates
 	return model, nil
 }
 
@@ -222,8 +222,8 @@ func (model *Model) findCompletion() *string {
 		return nil
 	}
 
-	for _, suggestion := range model.suggestions {
-		if after, ok := strings.CutPrefix(suggestion, model.inProgress); ok {
+	for _, candidate := range model.candidateTags {
+		if after, ok := strings.CutPrefix(candidate, model.inProgress); ok {
 			return &after
 		}
 	}
