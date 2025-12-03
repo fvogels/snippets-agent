@@ -59,7 +59,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onSetFilter(message)
 
 	case MsgSetItems:
-		return model.onSetFilter(message)
+		return model.onSetItems(message)
 	}
 
 	return model, nil
