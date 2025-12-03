@@ -20,8 +20,7 @@ import (
 
 type Model struct {
 	repository           data.Repository
-	screenWidth          int
-	screenHeight         int
+	screenSize           util.Size
 	selectedTags         util.Set[string]
 	compatibleTags       []string
 	compatibleEntries    []*data.Entry
@@ -57,8 +56,7 @@ func New(repository data.Repository) tea.Model {
 
 	model := Model{
 		repository:           repository,
-		screenWidth:          0,
-		screenHeight:         0,
+		screenSize:           util.Size{Width: 0, Height: 0},
 		selectedTags:         util.NewSet[string](),
 		compatibleTags:       nil,
 		compatibleEntries:    nil,
@@ -126,8 +124,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
-	model.screenWidth = message.Width
-	model.screenHeight = message.Height
+	model.screenSize = util.Size{Width: message.Width, Height: message.Height}
 
 	updatedRoot, command := model.root.Update(message)
 	model.root = updatedRoot
