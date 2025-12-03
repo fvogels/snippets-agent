@@ -1,10 +1,13 @@
 package debug
 
 import (
+	"code-snippets/ui/bundle"
+	"code-snippets/util"
 	"fmt"
 	"log/slog"
 	"reflect"
 	"runtime"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -26,6 +29,9 @@ func BubbleTeaMessageToString(message tea.Msg) string {
 
 	case tea.WindowSizeMsg:
 		return fmt.Sprintf("WindowSizeMsg[%d x %d]", message.Width, message.Height)
+
+	case bundle.MessageBundle:
+		return fmt.Sprintf("Bundle[%s]", strings.Join(util.Map(message.Messages, BubbleTeaMessageToString), ", "))
 
 	default:
 		return reflect.TypeOf(message).String()
