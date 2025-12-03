@@ -47,46 +47,34 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case MsgSelectPrevious:
-		if model.allowSelection {
-			if model.selectedIndex > 0 {
-				model.selectedIndex--
-			}
-			model.ensureSelectedIsVisible()
-
-			return model, model.signalItemSelected()
-		} else {
-			return model, nil
-		}
+		return model.onSelectPrevious()
 
 	case MsgSelectNext:
-		if model.allowSelection {
-			if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.items) {
-				model.selectedIndex++
-			}
-			model.ensureSelectedIsVisible()
-
-			return model, model.signalItemSelected()
-		} else {
-			return model, nil
-		}
+		return model.onSelectNext()
 
 	case tea.WindowSizeMsg:
-		model.width = message.Width
-		model.maximumHeight = message.Height
-		return model, nil
+		return model.onResize(message)
 
 	case MsgSetFilter:
-		model.filter = message.Predicate
-		model.refresh()
-		return model, model.signalItemSelected()
+		return model.onSetFilter(message)
 
 	case MsgSetItems:
-		model.items = message.Items
-		model.refresh()
-		return model, model.signalItemSelected()
+		return model.onSetFilter(message)
 	}
 
 	return model, nil
+}
+
+func (model Model) onSetFilter(message MsgSetFilter) (tea.Model, tea.Cmd) {
+	model.filter = message.Predicate
+	model.refresh()
+	return model, model.signalItemSelected()
+}
+
+func (model Model) onSetItems(message MsgSetItems) (tea.Model, tea.Cmd) {
+	model.items = message.Items
+	model.refresh()
+	return model, model.signalItemSelected()
 }
 
 func (model *Model) signalItemSelected() tea.Cmd {
@@ -105,6 +93,38 @@ func (model *Model) signalItemSelected() tea.Cmd {
 	} else {
 		return nil
 	}
+}
+
+func (model Model) onSelectPrevious() (tea.Model, tea.Cmd) {
+	if model.allowSelection {
+		if model.selectedIndex > 0 {
+			model.selectedIndex--
+		}
+		model.ensureSelectedIsVisible()
+
+		return model, model.signalItemSelected()
+	} else {
+		return model, nil
+	}
+}
+
+func (model Model) onSelectNext() (tea.Model, tea.Cmd) {
+	if model.allowSelection {
+		if model.selectedIndex != -1 && model.selectedIndex+1 < len(model.items) {
+			model.selectedIndex++
+		}
+		model.ensureSelectedIsVisible()
+
+		return model, model.signalItemSelected()
+	} else {
+		return model, nil
+	}
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.width = message.Width
+	model.maximumHeight = message.Height
+	return model, nil
 }
 
 func (model Model) View() string {
