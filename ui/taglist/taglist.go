@@ -4,7 +4,6 @@ import (
 	"code-snippets/debug"
 	"code-snippets/ui/stringlist"
 	"code-snippets/util"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -37,32 +36,43 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
-		slog.Debug("taglist resized", "width", message.Width, "height", message.Height)
-		model.size = util.Size{Width: message.Width, Height: message.Height}
-		updatedStringList, command := model.stringList.Update(tea.WindowSizeMsg{
-			Width:  message.Width - 2,
-			Height: message.Height - 2,
-		})
-		model.stringList = updatedStringList
-		return model, command
+		return model.onResize(message)
 
 	case MsgSetTags:
-		updatedStringList, command := model.stringList.Update(stringlist.MsgSetItems{
-			Items: message.Tags,
-		})
-		model.stringList = updatedStringList
-		return model, command
+		return model.onSetTags(message)
 
 	case MsgSetFilter:
-		updatedStringList, command := model.stringList.Update(message)
-		model.stringList = updatedStringList
-		return model, command
+		return model.onSetFilter(message)
 
 	default:
 		updatedStringList, command := model.stringList.Update(message)
 		model.stringList = updatedStringList
 		return model, command
 	}
+}
+
+func (model Model) onSetFilter(message MsgSetFilter) (tea.Model, tea.Cmd) {
+	updatedStringList, command := model.stringList.Update(message)
+	model.stringList = updatedStringList
+	return model, command
+}
+
+func (model Model) onSetTags(message MsgSetTags) (tea.Model, tea.Cmd) {
+	updatedStringList, command := model.stringList.Update(stringlist.MsgSetItems{
+		Items: message.Tags,
+	})
+	model.stringList = updatedStringList
+	return model, command
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.size = util.Size{Width: message.Width, Height: message.Height}
+	updatedStringList, command := model.stringList.Update(tea.WindowSizeMsg{
+		Width:  message.Width - 2,
+		Height: message.Height - 2,
+	})
+	model.stringList = updatedStringList
+	return model, command
 }
 
 func (model Model) View() string {
