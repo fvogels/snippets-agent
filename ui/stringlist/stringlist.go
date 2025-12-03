@@ -38,7 +38,8 @@ func New(allowSelection bool) Model {
 }
 
 func (model Model) Init() tea.Cmd {
-	return nil
+	slog.Debug("initializing stringlist")
+	return model.signalItemSelected()
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -77,29 +78,33 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case MsgSetFilter:
 		model.filter = message.Predicate
 		model.refresh()
-		return model, nil
+		return model, model.signalItemSelected()
 
 	case MsgSetItems:
 		model.items = message.Items
 		model.refresh()
-		return model, nil
+		return model, model.signalItemSelected()
 	}
 
 	return model, nil
 }
 
 func (model *Model) signalItemSelected() tea.Cmd {
-	selectedIndex := model.selectedIndex
-	selectedItem := model.items[selectedIndex]
+	if len(model.items) > 0 {
+		selectedIndex := model.selectedIndex
+		selectedItem := model.items[selectedIndex]
 
-	return func() tea.Msg {
-		msg := MsgItemSelected{
-			Index: selectedIndex,
-			Item:  selectedItem,
+		return func() tea.Msg {
+			msg := MsgItemSelected{
+				Index: selectedIndex,
+				Item:  selectedItem,
+			}
+
+			slog.Debug("signaling item selection", "index", selectedIndex, "item", selectedItem)
+			return model.messageTransformer(msg)
 		}
-
-		slog.Debug("signaling item selection", "index", selectedIndex, "item", selectedItem)
-		return model.messageTransformer(msg)
+	} else {
+		return nil
 	}
 }
 
