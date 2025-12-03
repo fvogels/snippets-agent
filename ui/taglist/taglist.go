@@ -2,7 +2,7 @@ package taglist
 
 import (
 	"code-snippets/debug"
-	"code-snippets/ui/stringlist"
+	"code-snippets/ui/components/stringlist"
 	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"

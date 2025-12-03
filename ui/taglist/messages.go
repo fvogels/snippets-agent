@@ -1,6 +1,6 @@
 package taglist
 
-import "code-snippets/ui/stringlist"
+import "code-snippets/ui/components/stringlist"
 
 type MsgSetTags struct {
 	Tags []string

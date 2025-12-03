@@ -3,7 +3,7 @@ package entrylist
 import (
 	"code-snippets/data"
 	"code-snippets/debug"
-	"code-snippets/ui/stringlist"
+	"code-snippets/ui/components/stringlist"
 	"code-snippets/util"
 	"log/slog"
 

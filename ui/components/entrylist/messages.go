@@ -2,7 +2,7 @@ package entrylist
 
 import (
 	"code-snippets/data"
-	"code-snippets/ui/stringlist"
+	"code-snippets/ui/components/stringlist"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
