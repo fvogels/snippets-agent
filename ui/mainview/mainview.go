@@ -3,7 +3,7 @@ package mainview
 import (
 	"code-snippets/data"
 	"code-snippets/debug"
-	"code-snippets/ui/entrylist"
+	"code-snippets/ui/components/entrylist"
 	"code-snippets/ui/horizontal"
 	"code-snippets/ui/mdview"
 	"code-snippets/ui/taginput"
