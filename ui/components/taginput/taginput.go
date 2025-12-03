@@ -136,12 +136,16 @@ func (model Model) onClearAll() (tea.Model, tea.Cmd) {
 }
 
 func (model Model) onAddTag() (tea.Model, tea.Cmd) {
-	model.completedTags = append(model.completedTags, model.inProgress)
-	model.inProgress = ""
-	return model, bundle.BundleCommands(
-		model.signalSelectedTagsChanged(),
-		model.signalInputChanged(),
-	)
+	if len(model.inProgress) > 0 {
+		model.completedTags = append(model.completedTags, model.inProgress)
+		model.inProgress = ""
+		return model, bundle.BundleCommands(
+			model.signalSelectedTagsChanged(),
+			model.signalInputChanged(),
+		)
+	} else {
+		return model, nil
+	}
 }
 
 func (model Model) View() string {
