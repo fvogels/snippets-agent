@@ -60,8 +60,6 @@ func New(repository data.Repository) tea.Model {
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
 
-	debug.Milestone()
-
 	return model
 }
 
@@ -69,6 +67,7 @@ func (model Model) Init() tea.Cmd {
 	debug.Milestone()
 
 	return tea.Batch(
+		model.root.Init(),
 		model.signalRefreshTagList(),
 		model.signalRefreshEntryList(),
 	)
@@ -117,10 +116,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				return entrylist.MsgSelectPrevious{}
 			}
 
-		case "enter":
-			command := model.rerenderMarkdownInBackground()
-			return model, command
-
 		case "ctrl+c":
 			model.copyCodeblockToClipboard()
 			return model, nil
@@ -152,7 +147,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case entrylist.MsgEntrySelected:
 		model.selectedEntry = message.Entry
-		return model, nil
+		return model, model.rerenderMarkdownInBackground()
 
 	default:
 		updatedRoot, command := model.root.Update(message)
