@@ -108,6 +108,12 @@ func (model Model) onAddTag() (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
+	renderedCompletedTags := model.renderSelectedTags()
+	renderedInProgress := model.renderInProgressTag(model.size.Width - lipgloss.Width(renderedCompletedTags))
+	return lipgloss.JoinHorizontal(0, renderedCompletedTags, renderedInProgress)
+}
+
+func (model *Model) renderSelectedTags() string {
 	var completedParts []string
 
 	for _, completedTag := range model.completedTags {
@@ -115,15 +121,15 @@ func (model Model) View() string {
 		completedParts = append(completedParts, styledTag, " ")
 	}
 
-	renderedCompletedTags := lipgloss.JoinHorizontal(0, completedParts...)
+	return lipgloss.JoinHorizontal(0, completedParts...)
+}
 
-	style := model.inProgressStyle.Width(model.size.Width - lipgloss.Width(renderedCompletedTags))
+func (model *Model) renderInProgressTag(width int) string {
+	style := model.inProgressStyle.Width(width)
 	if model.focused {
 		style = style.Background(lipgloss.Color("#AAA"))
 	}
-	styledInProgress := style.Render(model.inProgress)
-
-	return lipgloss.JoinHorizontal(0, renderedCompletedTags, styledInProgress)
+	return style.Render(model.inProgress)
 }
 
 func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {
