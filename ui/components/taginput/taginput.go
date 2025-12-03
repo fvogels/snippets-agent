@@ -2,6 +2,7 @@ package taginput
 
 import (
 	"code-snippets/debug"
+	"code-snippets/ui/bundle"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -75,7 +76,7 @@ func (model Model) onClearAll() (tea.Model, tea.Cmd) {
 func (model Model) onAddTag() (tea.Model, tea.Cmd) {
 	model.completedTags = append(model.completedTags, model.inProgress)
 	model.inProgress = ""
-	return model, tea.Batch(
+	return model, bundle.BundleCommands(
 		model.signalSelectedTagsChanged(),
 		model.signalInputChanged(),
 	)
