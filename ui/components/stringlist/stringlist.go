@@ -1,10 +1,8 @@
 package stringlist
 
 import (
-	"code-snippets/debug"
 	"code-snippets/ui/bundle"
 	"code-snippets/util"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -39,13 +37,10 @@ func New(allowSelection bool) Model {
 }
 
 func (model Model) Init() tea.Cmd {
-	slog.Debug("initializing stringlist")
 	return model.signalItemSelected()
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	debug.ShowBubbleTeaMessage(message)
-
 	switch message := message.(type) {
 	case bundle.MessageBundle:
 		return message.UpdateAll(model)

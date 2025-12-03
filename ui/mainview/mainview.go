@@ -218,8 +218,6 @@ func (model *Model) signalRefreshTagList() tea.Cmd {
 
 func (model *Model) signalRefreshEntryList() tea.Cmd {
 	return func() tea.Msg {
-		slog.Debug("Sending MsgSetEntries")
-
 		return entrylist.MsgSetEntries{
 			Entries: model.compatibleEntries,
 		}
