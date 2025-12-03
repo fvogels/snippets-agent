@@ -44,13 +44,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onSetEntries(message)
 
 	case tea.WindowSizeMsg:
-		model.size = util.Size{Width: message.Width, Height: message.Height}
-		updatedStringList, command := model.stringList.Update(tea.WindowSizeMsg{
-			Width:  message.Width - 2,
-			Height: message.Height - 2,
-		})
-		model.stringList = updatedStringList
-		return model, command
+		return model.onResize(message)
 
 	case msgStringListMessageWrapper:
 		switch message := message.message.(type) {
@@ -81,6 +75,16 @@ func (model Model) onSetEntries(message MsgSetEntries) (tea.Model, tea.Cmd) {
 
 	updatedStringList, command := model.stringList.Update(stringlist.MsgSetItems{
 		Items: titles,
+	})
+	model.stringList = updatedStringList
+	return model, command
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.size = util.Size{Width: message.Width, Height: message.Height}
+	updatedStringList, command := model.stringList.Update(tea.WindowSizeMsg{
+		Width:  message.Width - 2,
+		Height: message.Height - 2,
 	})
 	model.stringList = updatedStringList
 	return model, command
