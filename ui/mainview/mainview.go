@@ -166,6 +166,7 @@ func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) onSelectedTagsChanged(updatedSelectedTags []string) (tea.Model, tea.Cmd) {
+	slog.Debug("!!!")
 	model.recomputeCompatibleTagsAndEntries(updatedSelectedTags)
 
 	return model, tea.Batch(
@@ -209,8 +210,6 @@ func (model *Model) recomputeCompatibleTagsAndEntries(updatedSelectedTags []stri
 func (model *Model) signalRefreshTagList() tea.Cmd {
 	// TODO model.compatibleTags should be copied into a separate array first
 	return func() tea.Msg {
-		slog.Debug("Sending MsgSetTags")
-
 		return taglist.MsgSetTags{
 			Tags: model.compatibleTags,
 		}
