@@ -5,6 +5,8 @@ import (
 	"code-snippets/util"
 	"os"
 	"strings"
+
+	"github.com/yuin/goldmark/ast"
 )
 
 type Entry struct {
@@ -16,6 +18,7 @@ type Entry struct {
 
 type EntryData struct {
 	source []byte
+	ast    ast.Node
 }
 
 // Contents returns the markdown file, excluding the metadata section.
@@ -59,9 +62,18 @@ func (entry *Entry) loadSource() ([]byte, error) {
 	return data, nil
 }
 
+func (entry *EntryData) ParseAST() ast.Node {
+	if entry.ast == nil {
+		ast, _ := markdown.Parse(entry.source)
+		entry.ast = ast
+	}
+
+	return entry.ast
+}
+
 func (entry *EntryData) GetCodeBlocks() ([]markdown.CodeBlock, error) {
 	source := entry.source
-	ast, _ := markdown.Parse(source)
+	ast := entry.ParseAST()
 	codeBlocks := markdown.ExtractCodeBlocks(source, ast)
 
 	return codeBlocks, nil
