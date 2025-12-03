@@ -2,7 +2,6 @@ package taginput
 
 import (
 	"code-snippets/debug"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -34,7 +33,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case MsgAddCharacter:
 		model.inProgress += message.Character
-		slog.Debug("updated tag input", "input", model.inProgress)
 		return model, model.signalInputChanged()
 
 	case MsgClearSingle:
