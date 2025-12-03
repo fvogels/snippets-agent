@@ -35,8 +35,8 @@ type Model struct {
 }
 
 type SelectedEntry struct {
-	entry            *data.Entry
-	renderedMarkdown string
+	entry  *data.Entry
+	source string
 }
 
 func New(repository data.Repository) tea.Model {
@@ -74,8 +74,8 @@ func New(repository data.Repository) tea.Model {
 		entryListIdentifier:  entryListIdentifier,
 		mode:                 GeneralMode{},
 		selectedEntry: SelectedEntry{
-			entry:            nil,
-			renderedMarkdown: "",
+			entry:  nil,
+			source: "",
 		},
 	}
 
@@ -114,8 +114,12 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case taginput.MsgInputChanged:
 		return model.onPartiallyInputtedTagUpdate(message.Input)
 
+	case MsgEntryLoaded:
+		model.selectedEntry.source = message.Source
+		return model, model.signalUpdateMarkdownView()
+
 	case MsgMarkdownRendered:
-		model.selectedEntry.renderedMarkdown = message.renderedMarkdown
+		model.selectedEntry.source = message.renderedMarkdown
 		return model, nil
 
 	case entrylist.MsgEntrySelected:
@@ -252,13 +256,28 @@ func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
 				panic("failed to load markdown file")
 			}
 
-			return mdview.MsgSetSource{
-				Source: source,
-			}
+			return MsgEntryLoaded{Source: source}
 		}
 	} else {
-		model.selectedEntry.renderedMarkdown = ""
+		model.selectedEntry.source = ""
 		return nil
+	}
+}
+
+func (model *Model) signalUpdateMarkdownView() tea.Cmd {
+	entry := model.selectedEntry.entry
+	var source string
+
+	if entry != nil {
+		source = model.selectedEntry.source
+	} else {
+		source = ""
+	}
+
+	return func() tea.Msg {
+		return mdview.MsgSetSource{
+			Source: source,
+		}
 	}
 }
 
