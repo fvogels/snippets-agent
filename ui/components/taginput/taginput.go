@@ -4,6 +4,7 @@ import (
 	"code-snippets/debug"
 	"code-snippets/ui/bundle"
 	"code-snippets/util"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -11,6 +12,7 @@ import (
 
 type Model struct {
 	completedTags     []string
+	suggestions       []string
 	inProgress        string
 	completedTagStyle lipgloss.Style
 	inProgressStyle   lipgloss.Style
@@ -50,8 +52,16 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.BlurMsg:
 		return model.onBlur()
+
+	case MsgSetSuggesions:
+		return model.onSetSuggestions(message)
 	}
 
+	return model, nil
+}
+
+func (model Model) onSetSuggestions(message MsgSetSuggesions) (tea.Model, tea.Cmd) {
+	model.suggestions = message.Suggestions
 	return model, nil
 }
 
@@ -67,6 +77,9 @@ func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		return model, tea.Batch(commands...)
+
+	case "tab":
+		return model.onCompleteTag()
 
 	case "backspace":
 		return model.onClearSingle()
@@ -116,6 +129,15 @@ func (model Model) onFocus() (tea.Model, tea.Cmd) {
 func (model Model) onBlur() (tea.Model, tea.Cmd) {
 	model.focused = false
 	return model, nil
+}
+
+func (model Model) onCompleteTag() (tea.Model, tea.Cmd) {
+	if completion := model.findCompletion(); completion != nil {
+		model.inProgress += *completion
+		return model.onAddTag()
+	} else {
+		return model, nil
+	}
 }
 
 func (model Model) onAddCharacter(char byte) (tea.Model, tea.Cmd) {
@@ -178,7 +200,31 @@ func (model *Model) renderInProgressTag(width int) string {
 	if model.focused {
 		style = style.Background(lipgloss.Color("#AAA"))
 	}
-	return style.Render(model.inProgress)
+
+	var text string
+	if completion := model.findCompletion(); completion != nil {
+		completionStyle := lipgloss.NewStyle().Background(lipgloss.Color("#AAAAFF"))
+
+		text = lipgloss.JoinHorizontal(
+			0,
+			model.inProgress,
+			completionStyle.Render(*completion),
+		)
+	} else {
+		text = model.inProgress
+	}
+
+	return style.Render(text)
+}
+
+func (model *Model) findCompletion() *string {
+	for _, suggestion := range model.suggestions {
+		if after, ok := strings.CutPrefix(suggestion, model.inProgress); ok {
+			return &after
+		}
+	}
+
+	return nil
 }
 
 func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {

@@ -12,7 +12,6 @@ import (
 	"code-snippets/ui/components/target"
 	"code-snippets/ui/components/vertical"
 	"code-snippets/util"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -161,6 +160,7 @@ func (model Model) onPartiallyInputtedTagUpdate(partiallyInputtedTag string) (te
 	return model, tea.Batch(
 		model.signalUpdateTagListFilter(),
 		model.signalRefreshTagList(),
+		model.signalTagInputSuggestions(),
 	)
 }
 
@@ -210,6 +210,17 @@ func (model *Model) signalRefreshEntryList() tea.Cmd {
 	}
 }
 
+func (model *Model) signalTagInputSuggestions() tea.Cmd {
+	return func() tea.Msg {
+		return target.MsgTargetted{
+			Target: model.tagInputIdentifier,
+			Message: taginput.MsgSetSuggesions{
+				Suggestions: model.compatibleTags,
+			},
+		}
+	}
+}
+
 func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 	selectedTags := model.selectedTags.Copy()
 
@@ -218,8 +229,6 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 			Target: model.tagListIdentifier,
 			Message: taglist.MsgSetFilter{
 				Predicate: func(tag string) bool {
-					slog.Debug("setting filter", "ntags", selectedTags.Size())
-
 					if selectedTags.Contains(tag) {
 						return false
 					}
