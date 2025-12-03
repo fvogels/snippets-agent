@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
@@ -43,7 +44,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		command := func() tea.Msg {
 			renderer, err := glamour.NewTermRenderer(
 				glamour.WithAutoStyle(),
-				glamour.WithWordWrap(width),
+				glamour.WithWordWrap(width-2),
 			)
 			if err != nil {
 				panic("failed to create markdown renderer")
@@ -68,5 +69,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	return model.renderedMarkdown
+	borderStyle := lipgloss.NewStyle().Width(model.size.Width - 2).Height(model.size.Height - 2).Border(lipgloss.DoubleBorder())
+	innerStyle := lipgloss.NewStyle().MaxWidth(model.size.Width - 2).MaxHeight(model.size.Height - 2)
+	return borderStyle.Render(innerStyle.Render(model.renderedMarkdown))
 }
