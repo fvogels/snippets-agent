@@ -3,6 +3,7 @@ package ui
 import (
 	"code-snippets/configuration"
 	"code-snippets/data"
+	"code-snippets/debug"
 	"code-snippets/ui/entrylist"
 	"code-snippets/ui/horizontal"
 	"code-snippets/ui/mdview"
@@ -33,7 +34,7 @@ type Model struct {
 }
 
 func New(repository data.Repository) tea.Model {
-	util.DebugMilestone()
+	debug.Milestone()
 
 	tagListWidth := 20
 	entryListHeight := 20
@@ -59,13 +60,13 @@ func New(repository data.Repository) tea.Model {
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
 
-	util.DebugMilestone()
+	debug.Milestone()
 
 	return model
 }
 
 func (model Model) Init() tea.Cmd {
-	util.DebugMilestone()
+	debug.Milestone()
 
 	return tea.Batch(
 		model.signalRefreshTagList(),
@@ -78,7 +79,7 @@ func (model Model) View() string {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	util.DebugShowMessage(message)
+	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
 	case tea.KeyMsg:

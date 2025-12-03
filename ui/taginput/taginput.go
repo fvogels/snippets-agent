@@ -1,7 +1,7 @@
 package taginput
 
 import (
-	"code-snippets/util"
+	"code-snippets/debug"
 	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,7 +29,7 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	util.DebugShowMessage(message)
+	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
 	case MsgAddCharacter:

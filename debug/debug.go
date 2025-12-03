@@ -1,4 +1,4 @@
-package util
+package debug
 
 import (
 	"fmt"
@@ -9,17 +9,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func DebugShowMessage(message tea.Msg) {
+func ShowBubbleTeaMessage(message tea.Msg) {
 	_, file, line, _ := runtime.Caller(1)
 
 	slog.Debug(
 		"message received",
 		slog.String("location", fmt.Sprintf("%s:%d", file, line)),
-		slog.String("message", DebugMessageToString(message)),
+		slog.String("message", BubbleTeaMessageToString(message)),
 	)
 }
 
-func DebugMessageToString(message tea.Msg) string {
+func BubbleTeaMessageToString(message tea.Msg) string {
 	switch message := message.(type) {
 	case tea.KeyMsg:
 		return fmt.Sprintf("KeyMsg[%s]", message.String())
@@ -32,7 +32,7 @@ func DebugMessageToString(message tea.Msg) string {
 	}
 }
 
-func DebugMilestone() {
+func Milestone() {
 	_, file, line, _ := runtime.Caller(1)
 
 	slog.Debug(

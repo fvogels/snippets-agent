@@ -1,6 +1,7 @@
 package taglist
 
 import (
+	"code-snippets/debug"
 	"code-snippets/ui/stringlist"
 	"code-snippets/util"
 	"log/slog"
@@ -32,7 +33,7 @@ func (model Model) Init() tea.Cmd {
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
-	util.DebugShowMessage(message)
+	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
