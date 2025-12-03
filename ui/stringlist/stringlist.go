@@ -100,7 +100,6 @@ func (model *Model) signalItemSelected() tea.Cmd {
 				Item:  selectedItem,
 			}
 
-			slog.Debug("signaling item selection", "index", selectedIndex, "item", selectedItem)
 			return model.messageTransformer(msg)
 		}
 	} else {
