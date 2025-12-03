@@ -1,6 +1,9 @@
 package data
 
-import "code-snippets/util"
+import (
+	"code-snippets/util"
+	"sort"
+)
 
 type Repository interface {
 	ListTags() []string
@@ -67,6 +70,10 @@ func LoadRepository(rootDirectory string) (Repository, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Title < entries[j].Title
+	})
 
 	repository := MemoryRepository{
 		tagTable: tagTable,
