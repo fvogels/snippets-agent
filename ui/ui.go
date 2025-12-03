@@ -249,18 +249,18 @@ func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
 }
 
 func (model *Model) copyCodeblockToClipboard() {
-	// entry := model.entryList.GetSelectedEntry()
-	// codeBlocks, err := entry.GetCodeBlocks()
-	// if err != nil {
-	// 	panic("failed to get code blocks from markdown file")
-	// }
+	entry := model.selectedEntry
+	codeBlocks, err := entry.GetCodeBlocks()
+	if err != nil {
+		panic("failed to get code blocks from markdown file")
+	}
 
-	// if len(codeBlocks) == 0 {
-	// 	panic("no code block")
-	// }
+	if len(codeBlocks) == 0 {
+		panic("no code block")
+	}
 
-	// content := codeBlocks[0].Content
-	// clipboard.Write(clipboard.FmtText, content)
+	content := codeBlocks[0].Content
+	clipboard.Write(clipboard.FmtText, content)
 }
 
 type MsgMarkdownRendered struct {
