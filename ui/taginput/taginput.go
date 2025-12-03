@@ -35,13 +35,13 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onAddCharacter(message)
 
 	case MsgClearSingle:
-		return model.onClearSingle(message)
+		return model.onClearSingle()
 
 	case MsgClearAll:
-		return model.onClearAll(message)
+		return model.onClearAll()
 
 	case MsgAddTag:
-		return model.onAddTag(message)
+		return model.onAddTag()
 	}
 
 	return model, nil
@@ -52,7 +52,7 @@ func (model Model) onAddCharacter(message MsgAddCharacter) (tea.Model, tea.Cmd) 
 	return model, model.signalInputChanged()
 }
 
-func (model Model) onClearSingle(message MsgClearSingle) (tea.Model, tea.Cmd) {
+func (model Model) onClearSingle() (tea.Model, tea.Cmd) {
 	if len(model.inProgress) > 0 {
 		command := model.removeLastCharacterFromInProgress()
 		return model, command
@@ -62,7 +62,7 @@ func (model Model) onClearSingle(message MsgClearSingle) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (model Model) onClearAll(message MsgClearAll) (tea.Model, tea.Cmd) {
+func (model Model) onClearAll() (tea.Model, tea.Cmd) {
 	if len(model.inProgress) > 0 {
 		command := model.clearInProgress()
 		return model, command
@@ -72,7 +72,7 @@ func (model Model) onClearAll(message MsgClearAll) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (model Model) onAddTag(message MsgAddTag) (tea.Model, tea.Cmd) {
+func (model Model) onAddTag() (tea.Model, tea.Cmd) {
 	model.completedTags = append(model.completedTags, model.inProgress)
 	model.inProgress = ""
 	return model, tea.Batch(
