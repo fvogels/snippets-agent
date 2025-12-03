@@ -263,15 +263,13 @@ func (model *Model) signalUpdateMarkdownView() tea.Cmd {
 	}
 }
 
-func (model *Model) copyCodeblockToClipboard() {
+func (model *Model) copyCodeblockToClipboard(index int) {
 	if model.selectedEntry != nil {
 		codeBlocks := model.selectedEntry.GetCodeBlocks()
 
-		if len(codeBlocks) == 0 {
-			panic("no code block")
+		if index < len(codeBlocks) {
+			content := codeBlocks[index].Content
+			clipboard.Write(clipboard.FmtText, content)
 		}
-
-		content := codeBlocks[0].Content
-		clipboard.Write(clipboard.FmtText, content)
 	}
 }

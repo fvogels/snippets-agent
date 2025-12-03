@@ -33,8 +33,44 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 			return entrylist.MsgSelectPrevious{}
 		}
 
-	case "c":
-		model.copyCodeblockToClipboard()
+	case "1":
+		model.copyCodeblockToClipboard(0)
+		return model, nil
+
+	case "2":
+		model.copyCodeblockToClipboard(1)
+		return model, nil
+
+	case "3":
+		model.copyCodeblockToClipboard(2)
+		return model, nil
+
+	case "4":
+		model.copyCodeblockToClipboard(3)
+		return model, nil
+
+	case "5":
+		model.copyCodeblockToClipboard(4)
+		return model, nil
+
+	case "6":
+		model.copyCodeblockToClipboard(5)
+		return model, nil
+
+	case "7":
+		model.copyCodeblockToClipboard(6)
+		return model, nil
+
+	case "8":
+		model.copyCodeblockToClipboard(7)
+		return model, nil
+
+	case "9":
+		model.copyCodeblockToClipboard(8)
+		return model, nil
+
+	case "0":
+		model.copyCodeblockToClipboard(9)
 		return model, nil
 
 	default:
