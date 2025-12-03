@@ -55,15 +55,18 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch message.String() {
 	case "esc":
-		return model, func() tea.Msg {
-			return MsgRequestBlur{}
-		}
+		return model, model.signalReleaseFocus()
 
 	case "backspace":
 		return model.onClearSingle()
 
 	case "ctrl+w":
 		return model.onClearAll()
+
+	case "enter":
+		model.focused = false
+		updatedModel, command := model.onAddTag()
+		return updatedModel, tea.Batch(command, model.signalReleaseFocus())
 
 	case " ":
 		return model.onAddTag()
@@ -78,6 +81,12 @@ func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		return model, nil
+	}
+}
+
+func (model Model) signalReleaseFocus() tea.Cmd {
+	return func() tea.Msg {
+		return MsgReleaseFocus{}
 	}
 }
 

@@ -14,4 +14,4 @@ type MsgInputChanged struct {
 	Input string
 }
 
-type MsgRequestBlur struct{}
+type MsgReleaseFocus struct{}

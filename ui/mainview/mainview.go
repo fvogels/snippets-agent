@@ -121,7 +121,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case bundle.MessageBundle:
 		return message.UpdateAll(model)
 
-	case taginput.MsgRequestBlur:
+	case taginput.MsgReleaseFocus:
 		model.mode = GeneralMode{}
 		return model, nil
 
