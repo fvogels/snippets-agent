@@ -79,49 +79,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case tea.KeyMsg:
-		switch message.String() {
-		case "esc":
-			return model, tea.Quit
-
-		case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
-			return model, func() tea.Msg {
-				return taginput.MsgAddCharacter{Character: message.String()}
-			}
-
-		case "backspace":
-			return model, func() tea.Msg {
-				return taginput.MsgClearSingle{}
-			}
-
-		case "ctrl+w":
-			return model, func() tea.Msg {
-				return taginput.MsgClearAll{}
-			}
-
-		case " ":
-			return model, func() tea.Msg {
-				return taginput.MsgAddTag{}
-			}
-
-		case "down":
-			return model, func() tea.Msg {
-				return entrylist.MsgSelectNext{}
-			}
-
-		case "up":
-			return model, func() tea.Msg {
-				return entrylist.MsgSelectPrevious{}
-			}
-
-		case "ctrl+c":
-			model.copyCodeblockToClipboard()
-			return model, nil
-
-		default:
-			updatedRoot, command := model.root.Update(message)
-			model.root = updatedRoot
-			return model, command
-		}
+		return model.onKeyPressed(message)
 
 	case tea.WindowSizeMsg:
 		model.screenWidth = message.Width
@@ -145,6 +103,52 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case entrylist.MsgEntrySelected:
 		model.selectedEntry = message.Entry
 		return model, model.rerenderMarkdownInBackground()
+
+	default:
+		updatedRoot, command := model.root.Update(message)
+		model.root = updatedRoot
+		return model, command
+	}
+}
+
+func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch message.String() {
+	case "esc":
+		return model, tea.Quit
+
+	case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
+		return model, func() tea.Msg {
+			return taginput.MsgAddCharacter{Character: message.String()}
+		}
+
+	case "backspace":
+		return model, func() tea.Msg {
+			return taginput.MsgClearSingle{}
+		}
+
+	case "ctrl+w":
+		return model, func() tea.Msg {
+			return taginput.MsgClearAll{}
+		}
+
+	case " ":
+		return model, func() tea.Msg {
+			return taginput.MsgAddTag{}
+		}
+
+	case "down":
+		return model, func() tea.Msg {
+			return entrylist.MsgSelectNext{}
+		}
+
+	case "up":
+		return model, func() tea.Msg {
+			return entrylist.MsgSelectPrevious{}
+		}
+
+	case "ctrl+c":
+		model.copyCodeblockToClipboard()
+		return model, nil
 
 	default:
 		updatedRoot, command := model.root.Update(message)
