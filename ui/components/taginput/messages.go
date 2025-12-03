@@ -27,3 +27,5 @@ type MsgSelectedTagsChanged struct {
 type MsgInputChanged struct {
 	Input string
 }
+
+type MsgRequestBlur struct{}

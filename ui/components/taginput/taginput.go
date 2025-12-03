@@ -36,29 +36,49 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
+	case tea.KeyMsg:
+		return model.onKeyPressed(message)
+
 	case bundle.MessageBundle:
 		return message.UpdateAll(model)
 
 	case tea.WindowSizeMsg:
 		return model.onResize(message)
 
-	case MsgAddCharacter:
-		return model.onAddCharacter(message)
-
-	case MsgClearSingle:
-		return model.onClearSingle()
-
-	case MsgClearAll:
-		return model.onClearAll()
-
-	case MsgAddTag:
-		return model.onAddTag()
-
 	case MsgSetFocus:
 		return model.onSetFocus(message)
 	}
 
 	return model, nil
+}
+
+func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch message.String() {
+	case "esc":
+		return model, func() tea.Msg {
+			return MsgRequestBlur{}
+		}
+
+	case "backspace":
+		return model.onClearSingle()
+
+	case "ctrl+w":
+		return model.onClearAll()
+
+	case " ":
+		return model.onAddTag()
+
+	default:
+		if len(message.String()) == 1 {
+			char := message.String()[0]
+
+			if util.IsLowercaseLetter(char) || util.IsDigit(char) || char == '-' {
+				return model.onAddCharacter(char)
+			}
+		}
+
+		return model, nil
+	}
 }
 
 func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
@@ -73,8 +93,8 @@ func (model Model) onSetFocus(message MsgSetFocus) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model Model) onAddCharacter(message MsgAddCharacter) (tea.Model, tea.Cmd) {
-	model.inProgress += message.Character
+func (model Model) onAddCharacter(char byte) (tea.Model, tea.Cmd) {
+	model.inProgress += string(char)
 	return model, model.signalInputChanged()
 }
 

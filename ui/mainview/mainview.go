@@ -31,6 +31,7 @@ type Model struct {
 	partiallyInputtedTag string
 	selectedEntry        *data.Entry
 	root                 tea.Model
+	tagInputIdentifier   target.Identifier
 	tagListIdentifier    target.Identifier
 	entryListIdentifier  target.Identifier
 	mode                 mode
@@ -43,6 +44,7 @@ func New(repository data.Repository) tea.Model {
 	entryListHeight := 20
 	var tagListIdentifier target.Identifier
 	var entryListIdentifier target.Identifier
+	var tagInputIdentifier target.Identifier
 
 	pane := vertical.New()
 	pane.Add(func(size util.Size) int { return entryListHeight }, target.New(entrylist.New(), &entryListIdentifier))
@@ -54,7 +56,7 @@ func New(repository data.Repository) tea.Model {
 
 	root := vertical.New()
 	root.Add(func(size util.Size) int { return size.Height - 1 }, mainView)
-	root.Add(func(size util.Size) int { return 1 }, taginput.New())
+	root.Add(func(size util.Size) int { return 1 }, target.New(taginput.New(), &tagInputIdentifier))
 
 	model := Model{
 		repository:           repository,
@@ -67,6 +69,7 @@ func New(repository data.Repository) tea.Model {
 		partiallyInputtedTag: "",
 		selectedEntry:        nil,
 		root:                 root,
+		tagInputIdentifier:   tagInputIdentifier,
 		tagListIdentifier:    tagListIdentifier,
 		entryListIdentifier:  entryListIdentifier,
 		mode:                 GeneralMode{},
@@ -117,6 +120,10 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case bundle.MessageBundle:
 		return message.UpdateAll(model)
+
+	case taginput.MsgRequestBlur:
+		model.mode = GeneralMode{}
+		return model, nil
 
 	default:
 		updatedRoot, command := model.root.Update(message)

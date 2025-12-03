@@ -2,7 +2,7 @@ package mainview
 
 import (
 	"code-snippets/ui/components/taginput"
-	"code-snippets/util"
+	"code-snippets/ui/components/target"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,32 +17,14 @@ func (mode TagInputMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Mode
 			return taginput.MsgSetFocus{Focused: false}
 		}
 
-	case "backspace":
-		return model, func() tea.Msg {
-			return taginput.MsgClearSingle{}
-		}
-
-	case "ctrl+w":
-		return model, func() tea.Msg {
-			return taginput.MsgClearAll{}
-		}
-
-	case " ":
-		return model, func() tea.Msg {
-			return taginput.MsgAddTag{}
-		}
-
 	default:
-		if len(message.String()) == 1 {
-			char := message.String()[0]
+		// Ensure all key commands only reach the tag input
+		updatedRoot, command := model.root.Update(target.MsgTargetted{
+			Target:  model.tagInputIdentifier,
+			Message: message,
+		})
 
-			if util.IsLowercaseLetter(char) || util.IsDigit(char) || char == '-' {
-				return model, func() tea.Msg {
-					return taginput.MsgAddCharacter{Character: message.String()}
-				}
-			}
-		}
-
-		return model, nil
+		model.root = updatedRoot
+		return model, command
 	}
 }
