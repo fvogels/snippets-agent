@@ -27,12 +27,16 @@ type Model struct {
 	compatibleEntries    []*data.Entry
 	renderedMarkdown     string
 	partiallyInputtedTag string
-	selectedEntry        *data.Entry
+	selectedEntry        SelectedEntry
 	root                 tea.Model
 	tagInputIdentifier   target.Identifier
 	tagListIdentifier    target.Identifier
 	entryListIdentifier  target.Identifier
 	mode                 mode
+}
+
+type SelectedEntry struct {
+	entry *data.Entry
 }
 
 func New(repository data.Repository) tea.Model {
@@ -65,12 +69,14 @@ func New(repository data.Repository) tea.Model {
 		compatibleEntries:    nil,
 		renderedMarkdown:     "",
 		partiallyInputtedTag: "",
-		selectedEntry:        nil,
 		root:                 root,
 		tagInputIdentifier:   tagInputIdentifier,
 		tagListIdentifier:    tagListIdentifier,
 		entryListIdentifier:  entryListIdentifier,
 		mode:                 GeneralMode{},
+		selectedEntry: SelectedEntry{
+			entry: nil,
+		},
 	}
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
@@ -113,7 +119,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 
 	case entrylist.MsgEntrySelected:
-		model.selectedEntry = message.Entry
+		model.selectedEntry = SelectedEntry{entry: message.Entry}
 		return model, model.rerenderMarkdownInBackground()
 
 	case taginput.MsgReleaseFocus:
@@ -237,7 +243,7 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 }
 
 func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
-	entry := model.selectedEntry
+	entry := model.selectedEntry.entry
 
 	if entry != nil {
 		return func() tea.Msg {
@@ -257,7 +263,7 @@ func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
 }
 
 func (model *Model) copyCodeblockToClipboard() {
-	entry := model.selectedEntry
+	entry := model.selectedEntry.entry
 	codeBlocks, err := entry.GetCodeBlocks()
 	if err != nil {
 		panic("failed to get code blocks from markdown file")
