@@ -37,21 +37,7 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case tea.WindowSizeMsg:
-		model.size.Width = message.Width
-		model.size.Height = message.Height
-
-		commands := []tea.Cmd{}
-
-		for index, child := range model.children {
-			updatedChild, command := child.model.Update(tea.WindowSizeMsg{
-				Width:  child.widthFunction(model.size),
-				Height: message.Height,
-			})
-			model.children[index].model = updatedChild
-			commands = append(commands, command)
-		}
-
-		return model, tea.Batch(commands...)
+		return model.onResize(message)
 
 	default:
 		commands := []tea.Cmd{}
@@ -64,6 +50,24 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 		return model, tea.Batch(commands...)
 	}
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.size.Width = message.Width
+	model.size.Height = message.Height
+
+	commands := []tea.Cmd{}
+
+	for index, child := range model.children {
+		updatedChild, command := child.model.Update(tea.WindowSizeMsg{
+			Width:  child.widthFunction(model.size),
+			Height: message.Height,
+		})
+		model.children[index].model = updatedChild
+		commands = append(commands, command)
+	}
+
+	return model, tea.Batch(commands...)
 }
 
 func (model Model) View() string {
