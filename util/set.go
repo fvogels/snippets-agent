@@ -24,13 +24,17 @@ func (set *Set[T]) Add(item T) {
 	set.items[item] = true
 }
 
-func (set *Set[T]) Contains(item T) bool {
+func (set Set[T]) Contains(item T) bool {
 	_, ok := set.items[item]
 
 	return ok
 }
 
-func (set *Set[T]) ToSlice() []T {
+func (set Set[T]) Size() int {
+	return len(set.items)
+}
+
+func (set Set[T]) ToSlice() []T {
 	result := make([]T, len(set.items))
 	index := 0
 
@@ -80,4 +84,8 @@ func (set Set[T]) IsSubsetOf(other Set[T]) bool {
 
 func (set Set[T]) IsSupersetOf(other Set[T]) bool {
 	return other.IsSubsetOf(set)
+}
+
+func (set Set[T]) Copy() Set[T] {
+	return NewSetFromSlice(set.ToSlice())
 }
