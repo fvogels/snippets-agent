@@ -6,7 +6,6 @@ import (
 	"code-snippets/ui/bundle"
 	"code-snippets/ui/components/stringlist"
 	"code-snippets/util"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -21,7 +20,6 @@ type Model struct {
 func New() Model {
 	stringList := stringlist.New(true)
 	stringList.SetMessageTransformer(func(message tea.Msg) tea.Msg {
-		slog.Debug("transforming message")
 		return msgStringListMessageWrapper{
 			message: message,
 		}
