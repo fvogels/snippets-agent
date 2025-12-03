@@ -1,7 +1,6 @@
 package horizontal
 
 import (
-	"code-snippets/ui/bundle"
 	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -37,9 +36,6 @@ func (model Model) Init() tea.Cmd {
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
-	case bundle.MessageBundle:
-		return message.UpdateAll(model)
-
 	case tea.WindowSizeMsg:
 		return model.onResize(message)
 

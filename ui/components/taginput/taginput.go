@@ -2,7 +2,6 @@ package taginput
 
 import (
 	"code-snippets/debug"
-	"code-snippets/ui/bundle"
 	"code-snippets/util"
 	"strings"
 
@@ -40,9 +39,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	switch message := message.(type) {
 	case tea.KeyMsg:
 		return model.onKeyPressed(message)
-
-	case bundle.MessageBundle:
-		return message.UpdateAll(model)
 
 	case tea.WindowSizeMsg:
 		return model.onResize(message)
@@ -169,7 +165,7 @@ func (model Model) onAddTag() (tea.Model, tea.Cmd) {
 	if len(model.inProgress) > 0 {
 		model.completedTags = append(model.completedTags, model.inProgress)
 		model.inProgress = ""
-		return model, bundle.BundleCommands(
+		return model, tea.Sequence(
 			model.signalSelectedTagsChanged(),
 			model.signalInputChanged(),
 		)

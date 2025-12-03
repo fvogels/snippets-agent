@@ -2,7 +2,6 @@ package taglist
 
 import (
 	"code-snippets/debug"
-	"code-snippets/ui/bundle"
 	"code-snippets/ui/components/stringlist"
 	"code-snippets/util"
 
@@ -36,9 +35,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
-	case bundle.MessageBundle:
-		return message.UpdateAll(model)
-
 	case tea.WindowSizeMsg:
 		return model.onResize(message)
 
