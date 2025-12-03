@@ -25,7 +25,13 @@ func New() Model {
 }
 
 func (model Model) Init() tea.Cmd {
-	return nil
+	commands := []tea.Cmd{}
+
+	for _, child := range model.children {
+		commands = append(commands, child.model.Init())
+	}
+
+	return tea.Batch(commands...)
 }
 
 func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
