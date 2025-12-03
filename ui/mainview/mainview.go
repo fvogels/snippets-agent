@@ -268,10 +268,7 @@ func (model *Model) signalUpdateMarkdownView() tea.Cmd {
 
 func (model *Model) copyCodeblockToClipboard() {
 	if model.selectedEntry != nil {
-		codeBlocks, err := model.selectedEntry.GetCodeBlocks()
-		if err != nil {
-			panic("failed to get code blocks from markdown file")
-		}
+		codeBlocks := model.selectedEntry.GetCodeBlocks()
 
 		if len(codeBlocks) == 0 {
 			panic("no code block")

@@ -17,8 +17,9 @@ type Entry struct {
 }
 
 type EntryData struct {
-	source []byte
-	ast    ast.Node
+	source     []byte
+	ast        ast.Node
+	codeBlocks []markdown.CodeBlock
 }
 
 // Contents returns the markdown file, excluding the metadata section.
@@ -71,10 +72,12 @@ func (entry *EntryData) ParseAST() ast.Node {
 	return entry.ast
 }
 
-func (entry *EntryData) GetCodeBlocks() ([]markdown.CodeBlock, error) {
-	source := entry.source
-	ast := entry.ParseAST()
-	codeBlocks := markdown.ExtractCodeBlocks(source, ast)
+func (entry *EntryData) GetCodeBlocks() []markdown.CodeBlock {
+	if entry.codeBlocks == nil {
+		source := entry.source
+		ast := entry.ParseAST()
+		entry.codeBlocks = markdown.ExtractCodeBlocks(source, ast)
+	}
 
-	return codeBlocks, nil
+	return entry.codeBlocks
 }
