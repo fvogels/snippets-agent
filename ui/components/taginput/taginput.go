@@ -58,7 +58,15 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch message.String() {
 	case "esc":
-		return model, model.signalReleaseFocus()
+		model.focused = false
+
+		commands := []tea.Cmd{model.signalReleaseFocus()}
+		if len(model.inProgress) > 0 {
+			model.inProgress = ""
+			commands = append(commands, model.signalInputChanged())
+		}
+
+		return model, tea.Batch(commands...)
 
 	case "backspace":
 		return model.onClearSingle()
