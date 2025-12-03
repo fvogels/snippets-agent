@@ -141,10 +141,9 @@ func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.screenWidth = message.Width
 	model.screenHeight = message.Height
 
-	updatedRoot, rootCommand := model.root.Update(message)
+	updatedRoot, command := model.root.Update(message)
 	model.root = updatedRoot
-	markdownCommand := model.rerenderMarkdownInBackground()
-	return model, tea.Batch(rootCommand, markdownCommand)
+	return model, command
 }
 
 func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
