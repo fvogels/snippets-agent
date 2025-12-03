@@ -27,3 +27,11 @@ func Compose[T, U, R any](f func(T) U, g func(U) R) func(T) R {
 		return g(f(t))
 	}
 }
+
+func IsLowercaseLetter(char byte) bool {
+	return 'a' <= char && char <= 'z'
+}
+
+func IsDigit(char byte) bool {
+	return '0' <= char && char <= '9'
+}

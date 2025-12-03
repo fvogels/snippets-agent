@@ -33,6 +33,7 @@ type Model struct {
 	root                 tea.Model
 	tagListIdentifier    target.Identifier
 	entryListIdentifier  target.Identifier
+	mode                 mode
 }
 
 func New(repository data.Repository) tea.Model {
@@ -68,6 +69,7 @@ func New(repository data.Repository) tea.Model {
 		root:                 root,
 		tagListIdentifier:    tagListIdentifier,
 		entryListIdentifier:  entryListIdentifier,
+		mode:                 GeneralMode{},
 	}
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
@@ -134,49 +136,7 @@ func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch message.String() {
-	case "esc":
-		return model, tea.Quit
-
-	case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z":
-		return model, func() tea.Msg {
-			return taginput.MsgAddCharacter{Character: message.String()}
-		}
-
-	case "backspace":
-		return model, func() tea.Msg {
-			return taginput.MsgClearSingle{}
-		}
-
-	case "ctrl+w":
-		return model, func() tea.Msg {
-			return taginput.MsgClearAll{}
-		}
-
-	case " ":
-		return model, func() tea.Msg {
-			return taginput.MsgAddTag{}
-		}
-
-	case "down":
-		return model, func() tea.Msg {
-			return entrylist.MsgSelectNext{}
-		}
-
-	case "up":
-		return model, func() tea.Msg {
-			return entrylist.MsgSelectPrevious{}
-		}
-
-	case "ctrl+c":
-		model.copyCodeblockToClipboard()
-		return model, nil
-
-	default:
-		updatedRoot, command := model.root.Update(message)
-		model.root = updatedRoot
-		return model, command
-	}
+	return model.mode.onKeyPressed(model, message)
 }
 
 func (model Model) onSelectedTagsChanged(updatedSelectedTags []string) (tea.Model, tea.Cmd) {
