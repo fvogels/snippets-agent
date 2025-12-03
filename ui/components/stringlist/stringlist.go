@@ -2,6 +2,7 @@ package stringlist
 
 import (
 	"code-snippets/debug"
+	"code-snippets/ui/bundle"
 	"code-snippets/util"
 	"log/slog"
 
@@ -46,6 +47,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	debug.ShowBubbleTeaMessage(message)
 
 	switch message := message.(type) {
+	case bundle.MessageBundle:
+		return message.UpdateAll(model)
+
 	case MsgSelectPrevious:
 		return model.onSelectPrevious()
 
