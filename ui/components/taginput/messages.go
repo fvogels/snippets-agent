@@ -1,5 +1,9 @@
 package taginput
 
+type MsgSetFocus struct {
+	Focused bool
+}
+
 // MsgAddCharacter is an incoming message
 type MsgAddCharacter struct {
 	Character string

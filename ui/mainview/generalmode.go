@@ -2,6 +2,7 @@ package mainview
 
 import (
 	"code-snippets/ui/components/entrylist"
+	"code-snippets/ui/components/taginput"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -15,7 +16,9 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 
 	case "t":
 		model.mode = TagInputMode{}
-		return model, nil
+		return model, func() tea.Msg {
+			return taginput.MsgSetFocus{Focused: true}
+		}
 
 	case "down":
 		return model, func() tea.Msg {

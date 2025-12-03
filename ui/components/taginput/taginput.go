@@ -3,6 +3,7 @@ package taginput
 import (
 	"code-snippets/debug"
 	"code-snippets/ui/bundle"
+	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,6 +14,8 @@ type Model struct {
 	inProgress        string
 	completedTagStyle lipgloss.Style
 	inProgressStyle   lipgloss.Style
+	focused           bool
+	size              util.Size
 }
 
 func New() Model {
@@ -20,7 +23,8 @@ func New() Model {
 		completedTags:     nil,
 		inProgress:        "",
 		completedTagStyle: lipgloss.NewStyle().Background(lipgloss.Color("#AAFFAA")),
-		inProgressStyle:   lipgloss.NewStyle().Background(lipgloss.Color("#AAAAFF")),
+		inProgressStyle:   lipgloss.NewStyle(),
+		focused:           false,
 	}
 }
 
@@ -35,6 +39,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case bundle.MessageBundle:
 		return message.UpdateAll(model)
 
+	case tea.WindowSizeMsg:
+		return model.onResize(message)
+
 	case MsgAddCharacter:
 		return model.onAddCharacter(message)
 
@@ -46,8 +53,23 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MsgAddTag:
 		return model.onAddTag()
+
+	case MsgSetFocus:
+		return model.onSetFocus(message)
 	}
 
+	return model, nil
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.size.Width = message.Width
+	model.size.Height = message.Height
+
+	return model, nil
+}
+
+func (model Model) onSetFocus(message MsgSetFocus) (tea.Model, tea.Cmd) {
+	model.focused = message.Focused
 	return model, nil
 }
 
@@ -86,17 +108,22 @@ func (model Model) onAddTag() (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	var parts []string
+	var completedParts []string
 
 	for _, completedTag := range model.completedTags {
 		styledTag := model.completedTagStyle.Render(completedTag)
-		parts = append(parts, styledTag, " ")
+		completedParts = append(completedParts, styledTag, " ")
 	}
 
-	styledInProgress := model.inProgressStyle.Render(model.inProgress)
-	parts = append(parts, styledInProgress)
+	renderedCompletedTags := lipgloss.JoinHorizontal(0, completedParts...)
 
-	return lipgloss.JoinHorizontal(0, parts...)
+	style := model.inProgressStyle.Width(model.size.Width - lipgloss.Width(renderedCompletedTags))
+	if model.focused {
+		style = style.Background(lipgloss.Color("#AAA"))
+	}
+	styledInProgress := style.Render(model.inProgress)
+
+	return lipgloss.JoinHorizontal(0, renderedCompletedTags, styledInProgress)
 }
 
 func (model *Model) removeLastCharacterFromInProgress() tea.Cmd {

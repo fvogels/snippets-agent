@@ -13,7 +13,9 @@ func (mode TagInputMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Mode
 	switch message.String() {
 	case "esc":
 		model.mode = GeneralMode{}
-		return model, nil
+		return model, func() tea.Msg {
+			return taginput.MsgSetFocus{Focused: false}
+		}
 
 	case "backspace":
 		return model, func() tea.Msg {
