@@ -41,15 +41,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case MsgSetEntries:
-		updatedEntries := message.Entries
-		model.entries = message.Entries
-		titles := util.Map(updatedEntries, func(entry *data.Entry) string { return entry.Title })
-
-		updatedStringList, command := model.stringList.Update(stringlist.MsgSetItems{
-			Items: titles,
-		})
-		model.stringList = updatedStringList
-		return model, command
+		return model.onSetEntries(message)
 
 	case tea.WindowSizeMsg:
 		model.size = util.Size{Width: message.Width, Height: message.Height}
@@ -80,6 +72,18 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.stringList = updatedStringList
 		return model, command
 	}
+}
+
+func (model Model) onSetEntries(message MsgSetEntries) (tea.Model, tea.Cmd) {
+	updatedEntries := message.Entries
+	model.entries = message.Entries
+	titles := util.Map(updatedEntries, func(entry *data.Entry) string { return entry.Title })
+
+	updatedStringList, command := model.stringList.Update(stringlist.MsgSetItems{
+		Items: titles,
+	})
+	model.stringList = updatedStringList
+	return model, command
 }
 
 func (model Model) View() string {
