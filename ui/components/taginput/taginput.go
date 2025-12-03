@@ -218,6 +218,10 @@ func (model *Model) renderInProgressTag(width int) string {
 }
 
 func (model *Model) findCompletion() *string {
+	if len(model.inProgress) == 0 {
+		return nil
+	}
+
 	for _, suggestion := range model.suggestions {
 		if after, ok := strings.CutPrefix(suggestion, model.inProgress); ok {
 			return &after
