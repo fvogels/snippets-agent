@@ -124,7 +124,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case entrylist.MsgEntrySelected:
 		model.selectedEntry = SelectedEntry{entry: message.Entry}
-		return model, model.rerenderMarkdownInBackground()
+		return model, model.signalLoadSelectedEntry()
 
 	case taginput.MsgReleaseFocus:
 		model.mode = GeneralMode{}
@@ -245,7 +245,7 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 	}
 }
 
-func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
+func (model *Model) signalLoadSelectedEntry() tea.Cmd {
 	entry := model.selectedEntry.entry
 
 	if entry != nil {
