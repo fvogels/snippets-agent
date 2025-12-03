@@ -12,6 +12,7 @@ import (
 	"code-snippets/ui/components/target"
 	"code-snippets/ui/components/vertical"
 	"code-snippets/util"
+	"log/slog"
 	"slices"
 	"strings"
 
@@ -23,6 +24,7 @@ type Model struct {
 	repository           data.Repository
 	screenWidth          int
 	screenHeight         int
+	selectedTags         util.Set[string]
 	compatibleTags       []string
 	compatibleEntries    []*data.Entry
 	renderedMarkdown     string
@@ -57,6 +59,7 @@ func New(repository data.Repository) tea.Model {
 		repository:           repository,
 		screenWidth:          0,
 		screenHeight:         0,
+		selectedTags:         util.NewSet[string](),
 		compatibleTags:       nil,
 		compatibleEntries:    nil,
 		renderedMarkdown:     "",
@@ -195,10 +198,10 @@ func (model Model) onPartiallyInputtedTagUpdate(partiallyInputtedTag string) (te
 }
 
 func (model *Model) recomputeCompatibleTagsAndEntries(updatedSelectedTags []string) {
-	selectedTags := util.NewSetFromSlice(updatedSelectedTags)
+	model.selectedTags = util.NewSetFromSlice(updatedSelectedTags)
 	entries := []*data.Entry{}
 
-	model.repository.EnumerateEntries(selectedTags, func(entry *data.Entry) error {
+	model.repository.EnumerateEntries(model.selectedTags, func(entry *data.Entry) error {
 		entries = append(entries, entry)
 		return nil
 	})
@@ -206,7 +209,7 @@ func (model *Model) recomputeCompatibleTagsAndEntries(updatedSelectedTags []stri
 	model.compatibleEntries = entries
 
 	remainingTags := util.NewSet[string]()
-	model.repository.EnumerateEntries(selectedTags, func(entry *data.Entry) error {
+	model.repository.EnumerateEntries(model.selectedTags, func(entry *data.Entry) error {
 		remainingTags.Union(entry.Tags)
 		return nil
 	})
@@ -241,11 +244,19 @@ func (model *Model) signalRefreshEntryList() tea.Cmd {
 }
 
 func (model *Model) signalUpdateTagListFilter() tea.Cmd {
+	selectedTags := model.selectedTags.Copy()
+
 	return func() tea.Msg {
 		return target.MsgTargetted{
 			Target: model.tagListIdentifier,
 			Message: taglist.MsgSetFilter{
 				Predicate: func(tag string) bool {
+					slog.Debug("setting filter", "ntags", selectedTags.Size())
+
+					if selectedTags.Contains(tag) {
+						return false
+					}
+
 					return strings.Contains(tag, model.partiallyInputtedTag)
 				},
 			},
