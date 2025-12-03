@@ -19,18 +19,22 @@ import (
 )
 
 type Model struct {
-	repository           data.Repository
-	screenSize           util.Size
-	selectedTags         util.Set[string]
-	compatibleTags       []string
-	compatibleEntries    []*data.Entry
-	partiallyInputtedTag string
-	selectedEntry        *data.EntryData
-	root                 tea.Model
-	tagInputIdentifier   target.Identifier
-	tagListIdentifier    target.Identifier
-	entryListIdentifier  target.Identifier
-	mode                 mode
+	repository              data.Repository
+	screenSize              util.Size
+	selectedTags            util.Set[string]
+	compatibleTags          []string
+	entriesWithSelectedTags []*data.Entry
+	partiallyInputtedTag    string
+	selectedEntry           *data.EntryData
+	root                    tea.Model
+	targets                 Targets
+	mode                    mode
+}
+
+type Targets struct {
+	tagInput  target.Identifier
+	tagList   target.Identifier
+	entryList target.Identifier
 }
 
 func New(repository data.Repository) tea.Model {
@@ -38,35 +42,31 @@ func New(repository data.Repository) tea.Model {
 
 	tagListWidth := 20
 	entryListHeight := 20
-	var tagListIdentifier target.Identifier
-	var entryListIdentifier target.Identifier
-	var tagInputIdentifier target.Identifier
+	targets := Targets{}
 
 	pane := vertical.New()
-	pane.Add(func(size util.Size) int { return entryListHeight }, target.New(entrylist.New(), &entryListIdentifier))
+	pane.Add(func(size util.Size) int { return entryListHeight }, target.New(entrylist.New(), &targets.entryList))
 	pane.Add(func(size util.Size) int { return size.Height - entryListHeight }, mdview.New())
 
 	mainView := horizontal.New()
-	mainView.Add(func(size util.Size) int { return tagListWidth }, target.New(taglist.New(), &tagListIdentifier))
+	mainView.Add(func(size util.Size) int { return tagListWidth }, target.New(taglist.New(), &targets.tagList))
 	mainView.Add(func(size util.Size) int { return size.Width - tagListWidth }, pane)
 
 	root := vertical.New()
 	root.Add(func(size util.Size) int { return size.Height - 1 }, mainView)
-	root.Add(func(size util.Size) int { return 1 }, target.New(taginput.New(), &tagInputIdentifier))
+	root.Add(func(size util.Size) int { return 1 }, target.New(taginput.New(), &targets.tagInput))
 
 	model := Model{
-		repository:           repository,
-		screenSize:           util.Size{Width: 0, Height: 0},
-		selectedTags:         util.NewSet[string](),
-		compatibleTags:       nil,
-		compatibleEntries:    nil,
-		partiallyInputtedTag: "",
-		root:                 root,
-		tagInputIdentifier:   tagInputIdentifier,
-		tagListIdentifier:    tagListIdentifier,
-		entryListIdentifier:  entryListIdentifier,
-		mode:                 GeneralMode{},
-		selectedEntry:        nil,
+		repository:              repository,
+		screenSize:              util.Size{Width: 0, Height: 0},
+		selectedTags:            util.NewSet[string](),
+		compatibleTags:          nil,
+		entriesWithSelectedTags: nil,
+		partiallyInputtedTag:    "",
+		root:                    root,
+		targets:                 targets,
+		mode:                    GeneralMode{},
+		selectedEntry:           nil,
 	}
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
@@ -163,7 +163,7 @@ func (model *Model) recomputeCompatibleTagsAndEntries(updatedSelectedTags []stri
 		return nil
 	})
 
-	model.compatibleEntries = entries
+	model.entriesWithSelectedTags = entries
 
 	remainingTags := util.NewSet[string]()
 	model.repository.EnumerateEntries(model.selectedTags, func(entry *data.Entry) error {
@@ -181,7 +181,7 @@ func (model *Model) signalRefreshTagList() tea.Cmd {
 	// TODO model.compatibleTags should be copied into a separate array first
 	return func() tea.Msg {
 		return target.MsgTargetted{
-			Target: model.tagListIdentifier,
+			Target: model.targets.tagList,
 			Message: taglist.MsgSetTags{
 				Tags: model.compatibleTags,
 			},
@@ -192,9 +192,9 @@ func (model *Model) signalRefreshTagList() tea.Cmd {
 func (model *Model) signalRefreshEntryList() tea.Cmd {
 	return func() tea.Msg {
 		return target.MsgTargetted{
-			Target: model.entryListIdentifier,
+			Target: model.targets.entryList,
 			Message: entrylist.MsgSetEntries{
-				Entries: model.compatibleEntries,
+				Entries: model.entriesWithSelectedTags,
 			},
 		}
 	}
@@ -203,7 +203,7 @@ func (model *Model) signalRefreshEntryList() tea.Cmd {
 func (model *Model) signalTagInputCandidates() tea.Cmd {
 	return func() tea.Msg {
 		return target.MsgTargetted{
-			Target: model.tagInputIdentifier,
+			Target: model.targets.tagInput,
 			Message: taginput.MsgSetCandidates{
 				Candidates: model.compatibleTags,
 			},
@@ -216,7 +216,7 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 
 	return func() tea.Msg {
 		return target.MsgTargetted{
-			Target: model.tagListIdentifier,
+			Target: model.targets.tagList,
 			Message: taglist.MsgSetFilter{
 				Predicate: func(tag string) bool {
 					if selectedTags.Contains(tag) {

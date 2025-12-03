@@ -18,7 +18,7 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 		model.mode = TagInputMode{}
 		return model, func() tea.Msg {
 			return target.MsgTargetted{
-				Target:  model.tagInputIdentifier,
+				Target:  model.targets.tagInput,
 				Message: tea.FocusMsg{},
 			}
 		}
