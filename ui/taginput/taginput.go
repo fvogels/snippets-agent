@@ -58,7 +58,10 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case MsgAddTag:
 		model.completedTags = append(model.completedTags, model.inProgress)
 		model.inProgress = ""
-		return model, model.signalSelectedTagsChanged()
+		return model, tea.Batch(
+			model.signalSelectedTagsChanged(),
+			model.signalInputChanged(),
+		)
 	}
 
 	return model, nil
