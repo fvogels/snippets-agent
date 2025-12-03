@@ -25,7 +25,6 @@ type Model struct {
 	selectedTags         util.Set[string]
 	compatibleTags       []string
 	compatibleEntries    []*data.Entry
-	renderedMarkdown     string
 	partiallyInputtedTag string
 	selectedEntry        SelectedEntry
 	root                 tea.Model
@@ -36,7 +35,8 @@ type Model struct {
 }
 
 type SelectedEntry struct {
-	entry *data.Entry
+	entry            *data.Entry
+	renderedMarkdown string
 }
 
 func New(repository data.Repository) tea.Model {
@@ -67,7 +67,6 @@ func New(repository data.Repository) tea.Model {
 		selectedTags:         util.NewSet[string](),
 		compatibleTags:       nil,
 		compatibleEntries:    nil,
-		renderedMarkdown:     "",
 		partiallyInputtedTag: "",
 		root:                 root,
 		tagInputIdentifier:   tagInputIdentifier,
@@ -75,7 +74,8 @@ func New(repository data.Repository) tea.Model {
 		entryListIdentifier:  entryListIdentifier,
 		mode:                 GeneralMode{},
 		selectedEntry: SelectedEntry{
-			entry: nil,
+			entry:            nil,
+			renderedMarkdown: "",
 		},
 	}
 
@@ -115,7 +115,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onPartiallyInputtedTagUpdate(message.Input)
 
 	case MsgMarkdownRendered:
-		model.renderedMarkdown = message.renderedMarkdown
+		model.selectedEntry.renderedMarkdown = message.renderedMarkdown
 		return model, nil
 
 	case entrylist.MsgEntrySelected:
@@ -257,7 +257,7 @@ func (model *Model) rerenderMarkdownInBackground() tea.Cmd {
 			}
 		}
 	} else {
-		model.renderedMarkdown = ""
+		model.selectedEntry.renderedMarkdown = ""
 		return nil
 	}
 }
