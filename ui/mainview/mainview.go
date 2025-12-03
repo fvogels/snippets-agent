@@ -3,6 +3,7 @@ package mainview
 import (
 	"code-snippets/data"
 	"code-snippets/debug"
+	"code-snippets/ui/bundle"
 	"code-snippets/ui/components/entrylist"
 	"code-snippets/ui/components/horizontal"
 	"code-snippets/ui/components/mdview"
@@ -97,6 +98,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case entrylist.MsgEntrySelected:
 		model.selectedEntry = message.Entry
 		return model, model.rerenderMarkdownInBackground()
+
+	case bundle.MessageBundle:
+		return message.UpdateAll(model)
 
 	default:
 		updatedRoot, command := model.root.Update(message)
