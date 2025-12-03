@@ -26,17 +26,12 @@ type Model struct {
 	compatibleTags       []string
 	compatibleEntries    []*data.Entry
 	partiallyInputtedTag string
-	selectedEntry        SelectedEntry
+	selectedEntry        *data.EntryData
 	root                 tea.Model
 	tagInputIdentifier   target.Identifier
 	tagListIdentifier    target.Identifier
 	entryListIdentifier  target.Identifier
 	mode                 mode
-}
-
-type SelectedEntry struct {
-	entry  *data.Entry
-	source string
 }
 
 func New(repository data.Repository) tea.Model {
@@ -73,10 +68,7 @@ func New(repository data.Repository) tea.Model {
 		tagListIdentifier:    tagListIdentifier,
 		entryListIdentifier:  entryListIdentifier,
 		mode:                 GeneralMode{},
-		selectedEntry: SelectedEntry{
-			entry:  nil,
-			source: "",
-		},
+		selectedEntry:        nil,
 	}
 
 	model.recomputeCompatibleTagsAndEntries([]string{})
@@ -115,16 +107,12 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onPartiallyInputtedTagUpdate(message.Input)
 
 	case MsgEntryLoaded:
-		model.selectedEntry.source = message.Source
+		model.selectedEntry = &message.Data
 		return model, model.signalUpdateMarkdownView()
 
-	case MsgMarkdownRendered:
-		model.selectedEntry.source = message.renderedMarkdown
-		return model, nil
-
 	case entrylist.MsgEntrySelected:
-		model.selectedEntry = SelectedEntry{entry: message.Entry}
-		return model, model.signalLoadSelectedEntry()
+		selectedEntry := message.Entry
+		return model, model.signalLoadSelectedEntry(selectedEntry)
 
 	case taginput.MsgReleaseFocus:
 		model.mode = GeneralMode{}
@@ -245,30 +233,28 @@ func (model *Model) signalUpdateTagListFilter() tea.Cmd {
 	}
 }
 
-func (model *Model) signalLoadSelectedEntry() tea.Cmd {
-	entry := model.selectedEntry.entry
-
+func (model *Model) signalLoadSelectedEntry(entry *data.Entry) tea.Cmd {
 	if entry != nil {
 		return func() tea.Msg {
-			source, err := entry.GetSource()
+			data, err := entry.LoadData()
 			if err != nil {
-				panic("failed to load markdown file")
+				panic("failed to load entry data")
 			}
 
-			return MsgEntryLoaded{Source: source}
+			return MsgEntryLoaded{
+				Data: data,
+			}
 		}
 	} else {
-		model.selectedEntry.source = ""
+		model.selectedEntry = nil
 		return nil
 	}
 }
 
 func (model *Model) signalUpdateMarkdownView() tea.Cmd {
-	entry := model.selectedEntry.entry
 	var source string
-
-	if entry != nil {
-		source = model.selectedEntry.source
+	if model.selectedEntry != nil {
+		source = model.selectedEntry.Contents()
 	} else {
 		source = ""
 	}
@@ -281,24 +267,21 @@ func (model *Model) signalUpdateMarkdownView() tea.Cmd {
 }
 
 func (model *Model) copyCodeblockToClipboard() {
-	entry := model.selectedEntry.entry
-	codeBlocks, err := entry.GetCodeBlocks()
-	if err != nil {
-		panic("failed to get code blocks from markdown file")
+	if model.selectedEntry != nil {
+		codeBlocks, err := model.selectedEntry.GetCodeBlocks()
+		if err != nil {
+			panic("failed to get code blocks from markdown file")
+		}
+
+		if len(codeBlocks) == 0 {
+			panic("no code block")
+		}
+
+		content := codeBlocks[0].Content
+		clipboard.Write(clipboard.FmtText, content)
 	}
-
-	if len(codeBlocks) == 0 {
-		panic("no code block")
-	}
-
-	content := codeBlocks[0].Content
-	clipboard.Write(clipboard.FmtText, content)
-}
-
-type MsgMarkdownRendered struct {
-	renderedMarkdown string
 }
 
 type MsgEntryLoaded struct {
-	Source string
+	Data data.EntryData
 }

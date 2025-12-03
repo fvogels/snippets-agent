@@ -14,13 +14,13 @@ type Entry struct {
 	Tags       util.Set[string] `json:"tags"`
 }
 
-func (entry *Entry) GetSource() (string, error) {
-	source, err := entry.loadSource()
-	if err != nil {
-		return "", err
-	}
+type EntryData struct {
+	source []byte
+}
 
-	contents := string(source)
+// Contents returns the markdown file, excluding the metadata section.
+func (data *EntryData) Contents() string {
+	contents := string(data.source)
 	lines := strings.Lines(contents)
 
 	contentsWithoutMetadata := []string{}
@@ -36,7 +36,18 @@ func (entry *Entry) GetSource() (string, error) {
 		return true
 	})
 
-	return strings.Join(contentsWithoutMetadata, ""), nil
+	return strings.Join(contentsWithoutMetadata, "")
+}
+
+func (entry *Entry) LoadData() (EntryData, error) {
+	source, err := entry.loadSource()
+	if err != nil {
+		return EntryData{}, err
+	}
+
+	return EntryData{
+		source: source,
+	}, nil
 }
 
 func (entry *Entry) loadSource() ([]byte, error) {
@@ -48,12 +59,8 @@ func (entry *Entry) loadSource() ([]byte, error) {
 	return data, nil
 }
 
-func (entry *Entry) GetCodeBlocks() ([]markdown.CodeBlock, error) {
-	source, err := entry.loadSource()
-	if err != nil {
-		return nil, err
-	}
-
+func (entry *EntryData) GetCodeBlocks() ([]markdown.CodeBlock, error) {
+	source := entry.source
 	ast, _ := markdown.Parse(source)
 	codeBlocks := markdown.ExtractCodeBlocks(source, ast)
 
