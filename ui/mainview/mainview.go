@@ -4,7 +4,7 @@ import (
 	"code-snippets/data"
 	"code-snippets/debug"
 	"code-snippets/ui/components/entrylist"
-	"code-snippets/ui/horizontal"
+	"code-snippets/ui/components/horizontal"
 	"code-snippets/ui/mdview"
 	"code-snippets/ui/taginput"
 	"code-snippets/ui/taglist"
