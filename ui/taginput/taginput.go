@@ -32,37 +32,53 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch message := message.(type) {
 	case MsgAddCharacter:
-		model.inProgress += message.Character
-		return model, model.signalInputChanged()
+		return model.onAddCharacter(message)
 
 	case MsgClearSingle:
-		if len(model.inProgress) > 0 {
-			command := model.removeLastCharacterFromInProgress()
-			return model, command
-		} else {
-			command := model.dropLastCompletedTag()
-			return model, command
-		}
+		return model.onClearSingle(message)
 
 	case MsgClearAll:
-		if len(model.inProgress) > 0 {
-			command := model.clearInProgress()
-			return model, command
-		} else {
-			command := model.clearCompletedTags()
-			return model, command
-		}
+		return model.onClearAll(message)
 
 	case MsgAddTag:
-		model.completedTags = append(model.completedTags, model.inProgress)
-		model.inProgress = ""
-		return model, tea.Batch(
-			model.signalSelectedTagsChanged(),
-			model.signalInputChanged(),
-		)
+		return model.onAddTag(message)
 	}
 
 	return model, nil
+}
+
+func (model Model) onAddCharacter(message MsgAddCharacter) (tea.Model, tea.Cmd) {
+	model.inProgress += message.Character
+	return model, model.signalInputChanged()
+}
+
+func (model Model) onClearSingle(message MsgClearSingle) (tea.Model, tea.Cmd) {
+	if len(model.inProgress) > 0 {
+		command := model.removeLastCharacterFromInProgress()
+		return model, command
+	} else {
+		command := model.dropLastCompletedTag()
+		return model, command
+	}
+}
+
+func (model Model) onClearAll(message MsgClearAll) (tea.Model, tea.Cmd) {
+	if len(model.inProgress) > 0 {
+		command := model.clearInProgress()
+		return model, command
+	} else {
+		command := model.clearCompletedTags()
+		return model, command
+	}
+}
+
+func (model Model) onAddTag(message MsgAddTag) (tea.Model, tea.Cmd) {
+	model.completedTags = append(model.completedTags, model.inProgress)
+	model.inProgress = ""
+	return model, tea.Batch(
+		model.signalSelectedTagsChanged(),
+		model.signalInputChanged(),
+	)
 }
 
 func (model Model) View() string {
