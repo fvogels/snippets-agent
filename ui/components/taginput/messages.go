@@ -1,9 +1,5 @@
 package taginput
 
-type MsgSetFocus struct {
-	Focused bool
-}
-
 // MsgSelectedTagsChanged is an outgoing message
 type MsgSelectedTagsChanged struct {
 	SelectedTags []string

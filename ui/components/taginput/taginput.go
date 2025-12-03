@@ -45,8 +45,11 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		return model.onResize(message)
 
-	case MsgSetFocus:
-		return model.onSetFocus(message)
+	case tea.FocusMsg:
+		return model.onFocus()
+
+	case tea.BlurMsg:
+		return model.onBlur()
 	}
 
 	return model, nil
@@ -97,8 +100,13 @@ func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model Model) onSetFocus(message MsgSetFocus) (tea.Model, tea.Cmd) {
-	model.focused = message.Focused
+func (model Model) onFocus() (tea.Model, tea.Cmd) {
+	model.focused = true
+	return model, nil
+}
+
+func (model Model) onBlur() (tea.Model, tea.Cmd) {
+	model.focused = false
 	return model, nil
 }
 

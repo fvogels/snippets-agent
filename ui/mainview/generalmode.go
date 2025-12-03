@@ -2,7 +2,7 @@ package mainview
 
 import (
 	"code-snippets/ui/components/entrylist"
-	"code-snippets/ui/components/taginput"
+	"code-snippets/ui/components/target"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,7 +17,10 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 	case "t":
 		model.mode = TagInputMode{}
 		return model, func() tea.Msg {
-			return taginput.MsgSetFocus{Focused: true}
+			return target.MsgTargetted{
+				Target:  model.tagInputIdentifier,
+				Message: tea.FocusMsg{},
+			}
 		}
 
 	case "down":
