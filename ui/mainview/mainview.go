@@ -12,7 +12,6 @@ import (
 	"code-snippets/ui/components/target"
 	"code-snippets/ui/components/vertical"
 	"code-snippets/util"
-	"log/slog"
 	"slices"
 	"strings"
 
@@ -178,7 +177,6 @@ func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) onSelectedTagsChanged(updatedSelectedTags []string) (tea.Model, tea.Cmd) {
-	slog.Debug("!!!")
 	model.recomputeCompatibleTagsAndEntries(updatedSelectedTags)
 
 	return model, tea.Batch(
