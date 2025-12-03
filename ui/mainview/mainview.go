@@ -106,7 +106,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	case taginput.MsgInputChanged:
 		return model.onPartiallyInputtedTagUpdate(message.Input)
 
-	case MsgEntryLoaded:
+	case msgEntryLoaded:
 		model.selectedEntry = &message.Data
 		return model, model.signalUpdateMarkdownView()
 
@@ -241,7 +241,7 @@ func (model *Model) signalLoadSelectedEntry(entry *data.Entry) tea.Cmd {
 				panic("failed to load entry data")
 			}
 
-			return MsgEntryLoaded{
+			return msgEntryLoaded{
 				Data: data,
 			}
 		}
@@ -277,8 +277,4 @@ func (model *Model) copyCodeblockToClipboard() {
 		content := codeBlocks[0].Content
 		clipboard.Write(clipboard.FmtText, content)
 	}
-}
-
-type MsgEntryLoaded struct {
-	Data data.EntryData
 }
