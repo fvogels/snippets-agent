@@ -14,7 +14,7 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 	case "q":
 		return model, tea.Quit
 
-	case "t":
+	case " ":
 		model.mode = TagInputMode{}
 		return model, func() tea.Msg {
 			return target.MsgTargetted{
