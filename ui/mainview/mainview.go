@@ -82,13 +82,7 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onKeyPressed(message)
 
 	case tea.WindowSizeMsg:
-		model.screenWidth = message.Width
-		model.screenHeight = message.Height
-
-		updatedRoot, rootCommand := model.root.Update(message)
-		model.root = updatedRoot
-		markdownCommand := model.rerenderMarkdownInBackground()
-		return model, tea.Batch(rootCommand, markdownCommand)
+		return model.onResize(message)
 
 	case taginput.MsgSelectedTagsChanged:
 		return model.onSelectedTagsChanged(message.SelectedTags)
@@ -109,6 +103,16 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		model.root = updatedRoot
 		return model, command
 	}
+}
+
+func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.screenWidth = message.Width
+	model.screenHeight = message.Height
+
+	updatedRoot, rootCommand := model.root.Update(message)
+	model.root = updatedRoot
+	markdownCommand := model.rerenderMarkdownInBackground()
+	return model, tea.Batch(rootCommand, markdownCommand)
 }
 
 func (model Model) onKeyPressed(message tea.KeyMsg) (tea.Model, tea.Cmd) {
