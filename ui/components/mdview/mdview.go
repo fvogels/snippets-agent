@@ -2,7 +2,6 @@ package mdview
 
 import (
 	"code-snippets/util"
-	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -44,7 +43,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	slog.Debug("mdview size", "height", model.size.Height)
 	style := lipgloss.NewStyle().MaxWidth(model.size.Width - 2).MaxHeight(model.size.Height - 2)
 	return style.Render(model.renderedMarkdown)
 }
