@@ -40,6 +40,9 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 	case "esc", "`":
 		return model.unselectCodeBlock()
 
+	case "tab":
+		return model.selectNextCodeBlock()
+
 	case "1":
 		return model.selectCodeblock(0)
 

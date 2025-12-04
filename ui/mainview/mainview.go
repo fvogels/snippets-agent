@@ -323,3 +323,21 @@ func (model Model) unselectCodeBlock() (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 }
+
+func (model Model) selectNextCodeBlock() (tea.Model, tea.Cmd) {
+	if model.selectedEntry == nil || model.selectedEntry.data == nil {
+		return model, nil
+	}
+
+	if model.selectedEntry.selectedCodeblockIndex == nil {
+		// No code block was selected, so select first
+		index := 0
+		model.selectedEntry.selectedCodeblockIndex = &index
+	} else {
+		index := *model.selectedEntry.selectedCodeblockIndex
+		index = (index + 1) % model.selectedEntry.data.GetCodeBlockCount()
+		model.selectedEntry.selectedCodeblockIndex = &index
+	}
+
+	return model, model.signalUpdateViewer()
+}
