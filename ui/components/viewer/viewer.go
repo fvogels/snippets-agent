@@ -54,14 +54,25 @@ func (model Model) onSetDocument(message MsgSetDocument) (tea.Model, tea.Cmd) {
 
 	switch document := model.document.(type) {
 	case Markdown:
-		viewer := mdview.New()
-		model.viewer = viewer
-		command1 := viewer.Init()
-		viewer2, command2 := viewer.Update(mdview.MsgSetSource{Source: document.Source})
-		viewer3, command3 := viewer2.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
-		model.viewer = viewer3
+		commands := []tea.Cmd{}
 
-		return model, tea.Sequence(command1, command2, command3)
+		model.viewer = mdview.New()
+		{
+			command := model.viewer.Init()
+			commands = append(commands, command)
+		}
+		{
+			updatedViewer, command := model.viewer.Update(mdview.MsgSetSource{Source: document.Source})
+			model.viewer = updatedViewer
+			commands = append(commands, command)
+		}
+		{
+			viewer, command := model.viewer.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
+			model.viewer = viewer
+			commands = append(commands, command)
+		}
+
+		return model, tea.Sequence(commands...)
 
 	default:
 		panic("unsupported document type")
