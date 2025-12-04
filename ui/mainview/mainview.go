@@ -341,3 +341,21 @@ func (model Model) selectNextCodeBlock() (tea.Model, tea.Cmd) {
 
 	return model, model.signalUpdateViewer()
 }
+
+func (model Model) selectPreviousCodeBlock() (tea.Model, tea.Cmd) {
+	if model.selectedEntry == nil || model.selectedEntry.data == nil {
+		return model, nil
+	}
+
+	if model.selectedEntry.selectedCodeblockIndex == nil {
+		// No code block was selected, so select last
+		index := model.selectedEntry.data.GetCodeBlockCount() - 1
+		model.selectedEntry.selectedCodeblockIndex = &index
+	} else {
+		index := *model.selectedEntry.selectedCodeblockIndex
+		index = (index + model.selectedEntry.data.GetCodeBlockCount() - 1) % model.selectedEntry.data.GetCodeBlockCount()
+		model.selectedEntry.selectedCodeblockIndex = &index
+	}
+
+	return model, model.signalUpdateViewer()
+}

@@ -43,6 +43,9 @@ func (mode GeneralMode) onKeyPressed(model Model, message tea.KeyMsg) (tea.Model
 	case "tab":
 		return model.selectNextCodeBlock()
 
+	case "shift+tab":
+		return model.selectPreviousCodeBlock()
+
 	case "1":
 		return model.selectCodeblock(0)
 
