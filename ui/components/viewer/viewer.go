@@ -3,8 +3,10 @@ package viewer
 import (
 	"code-snippets/ui/components/mdview"
 	"code-snippets/util"
+	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
@@ -42,7 +44,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	return model.viewer.View()
+	slog.Debug("viewer size", "height", model.size.Height)
+	style := lipgloss.NewStyle().Border(lipgloss.DoubleBorder()).Width(model.size.Width - 2).Height(model.size.Height - 2)
+	return style.Render(model.viewer.View())
 }
 
 func (model Model) onSetDocument(message MsgSetDocument) (tea.Model, tea.Cmd) {
@@ -53,10 +57,11 @@ func (model Model) onSetDocument(message MsgSetDocument) (tea.Model, tea.Cmd) {
 		viewer := mdview.New()
 		model.viewer = viewer
 		command1 := viewer.Init()
-		updatedViewer, command2 := viewer.Update(mdview.MsgSetSource{Source: document.Source})
-		model.viewer = updatedViewer
+		viewer2, command2 := viewer.Update(mdview.MsgSetSource{Source: document.Source})
+		viewer3, command3 := viewer2.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
+		model.viewer = viewer3
 
-		return model, tea.Sequence(command1, command2)
+		return model, tea.Sequence(command1, command2, command3)
 
 	default:
 		panic("unsupported document type")
@@ -69,7 +74,10 @@ func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 		Height: message.Height,
 	}
 
-	updatedViewer, command := model.viewer.Update(message)
+	updatedViewer, command := model.viewer.Update(tea.WindowSizeMsg{
+		Width:  message.Width - 2,
+		Height: message.Height - 2,
+	})
 	model.viewer = updatedViewer
 
 	return model, command

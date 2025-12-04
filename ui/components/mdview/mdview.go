@@ -2,6 +2,7 @@ package mdview
 
 import (
 	"code-snippets/util"
+	"log/slog"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -43,9 +44,9 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	borderStyle := lipgloss.NewStyle().Width(model.size.Width).Height(model.size.Height)
-	innerStyle := lipgloss.NewStyle().MaxWidth(model.size.Width - 2).MaxHeight(model.size.Height - 2)
-	return borderStyle.Render(innerStyle.Render(model.renderedMarkdown))
+	slog.Debug("mdview size", "height", model.size.Height)
+	style := lipgloss.NewStyle().MaxWidth(model.size.Width - 2).MaxHeight(model.size.Height - 2)
+	return style.Render(model.renderedMarkdown)
 }
 
 func (model Model) onSetSource(message MsgSetSource) (tea.Model, tea.Cmd) {
