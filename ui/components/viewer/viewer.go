@@ -2,6 +2,7 @@ package viewer
 
 import (
 	"code-snippets/ui/components/mdview"
+	"code-snippets/ui/components/textview"
 	"code-snippets/util"
 	"log/slog"
 
@@ -54,29 +55,58 @@ func (model Model) onSetDocument(message MsgSetDocument) (tea.Model, tea.Cmd) {
 
 	switch document := model.document.(type) {
 	case Markdown:
-		commands := []tea.Cmd{}
+		return model.onSetMarkdownDocument(document)
 
-		model.viewer = mdview.New()
-		{
-			command := model.viewer.Init()
-			commands = append(commands, command)
-		}
-		{
-			updatedViewer, command := model.viewer.Update(mdview.MsgSetSource{Source: document.Source})
-			model.viewer = updatedViewer
-			commands = append(commands, command)
-		}
-		{
-			viewer, command := model.viewer.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
-			model.viewer = viewer
-			commands = append(commands, command)
-		}
-
-		return model, tea.Sequence(commands...)
+	case Text:
+		return model.onSetTextDocument(document)
 
 	default:
 		panic("unsupported document type")
 	}
+}
+
+func (model Model) onSetMarkdownDocument(document Markdown) (tea.Model, tea.Cmd) {
+	commands := []tea.Cmd{}
+
+	model.viewer = mdview.New()
+	{
+		command := model.viewer.Init()
+		commands = append(commands, command)
+	}
+	{
+		updatedViewer, command := model.viewer.Update(mdview.MsgSetSource{Source: document.Source})
+		model.viewer = updatedViewer
+		commands = append(commands, command)
+	}
+	{
+		viewer, command := model.viewer.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
+		model.viewer = viewer
+		commands = append(commands, command)
+	}
+
+	return model, tea.Sequence(commands...)
+}
+
+func (model Model) onSetTextDocument(document Text) (tea.Model, tea.Cmd) {
+	commands := []tea.Cmd{}
+
+	model.viewer = textview.New()
+	{
+		command := model.viewer.Init()
+		commands = append(commands, command)
+	}
+	{
+		updatedViewer, command := model.viewer.Update(mdview.MsgSetSource{Source: document.Source})
+		model.viewer = updatedViewer
+		commands = append(commands, command)
+	}
+	{
+		viewer, command := model.viewer.Update(tea.WindowSizeMsg{Width: model.size.Width - 2, Height: model.size.Height - 2})
+		model.viewer = viewer
+		commands = append(commands, command)
+	}
+
+	return model, tea.Sequence(commands...)
 }
 
 func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {

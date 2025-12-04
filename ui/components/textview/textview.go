@@ -1,22 +1,20 @@
-package mdview
+package textview
 
 import (
 	"code-snippets/util"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
-	source           []byte
-	renderedMarkdown string
-	size             util.Size
+	size   util.Size
+	source string
 }
 
 func New() Model {
 	model := Model{
-		source: nil,
+		source: "",
 	}
 
 	return model
@@ -33,10 +31,6 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case MsgSetSource:
 		return model.onSetSource(message)
-
-	case msgRenderingDone:
-		model.renderedMarkdown = message.renderedMarkdown
-		return model, nil
 	}
 
 	return model, nil
@@ -44,30 +38,12 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 func (model Model) View() string {
 	style := lipgloss.NewStyle().MaxWidth(model.size.Width).MaxHeight(model.size.Height)
-	return style.Render(model.renderedMarkdown)
+	return style.Render(model.source)
 }
 
 func (model Model) onSetSource(message MsgSetSource) (tea.Model, tea.Cmd) {
-	width := model.size.Width
-
-	command := func() tea.Msg {
-		renderer, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(width-2),
-		)
-		if err != nil {
-			panic("failed to create markdown renderer")
-		}
-		renderedMarkdown, err := renderer.Render(message.Source)
-		if err != nil {
-			panic("failed to render markdown file")
-		}
-		return msgRenderingDone{
-			renderedMarkdown: renderedMarkdown,
-		}
-	}
-
-	return model, command
+	model.source = message.Source
+	return model, nil
 }
 
 func (model Model) onResize(message tea.WindowSizeMsg) (tea.Model, tea.Cmd) {

@@ -72,12 +72,20 @@ func (entry *EntryData) ParseAST() ast.Node {
 	return entry.ast
 }
 
-func (entry *EntryData) GetCodeBlocks() []markdown.CodeBlock {
+func (entry *EntryData) GetCodeBlockCount() int {
+	entry.ensureCodeBlocksAreCollected()
+	return len(entry.codeBlocks)
+}
+
+func (entry *EntryData) GetCodeBlock(index int) markdown.CodeBlock {
+	entry.ensureCodeBlocksAreCollected()
+	return entry.codeBlocks[index]
+}
+
+func (entry *EntryData) ensureCodeBlocksAreCollected() {
 	if entry.codeBlocks == nil {
 		source := entry.source
 		ast := entry.ParseAST()
 		entry.codeBlocks = markdown.ExtractCodeBlocks(source, ast)
 	}
-
-	return entry.codeBlocks
 }

@@ -25,10 +25,16 @@ type Model struct {
 	compatibleTags          []string
 	entriesWithSelectedTags []*data.Entry
 	partiallyInputtedTag    string
-	selectedEntry           *data.EntryData
+	selectedEntry           *SelectedEntry
 	root                    tea.Model
 	targets                 Targets
 	mode                    mode
+}
+
+type SelectedEntry struct {
+	entry                  data.Entry
+	data                   *data.EntryData
+	selectedCodeblockIndex *int
 }
 
 type Targets struct {
@@ -106,11 +112,14 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		return model.onPartiallyInputtedTagUpdate(message.Input)
 
 	case msgEntryLoaded:
-		model.selectedEntry = &message.Data
-		return model, model.signalUpdateMarkdownView()
+		model.selectedEntry.data = &message.Data
+		return model, model.signalUpdateViewer()
 
 	case entrylist.MsgEntrySelected:
 		selectedEntry := message.Entry
+		model.selectedEntry = &SelectedEntry{
+			entry: *selectedEntry,
+		}
 		return model, model.signalLoadSelectedEntry(selectedEntry)
 
 	case taginput.MsgReleaseFocus:
@@ -249,10 +258,17 @@ func (model *Model) signalLoadSelectedEntry(entry *data.Entry) tea.Cmd {
 	}
 }
 
-func (model *Model) signalUpdateMarkdownView() tea.Cmd {
+func (model *Model) signalUpdateViewer() tea.Cmd {
 	var source string
-	if model.selectedEntry != nil {
-		source = model.selectedEntry.Contents()
+	if model.selectedEntry != nil && model.selectedEntry.data != nil {
+		if model.selectedEntry.selectedCodeblockIndex == nil {
+			// No particular code block selected, so show entire markdown contents
+			source = model.selectedEntry.data.Contents()
+		} else {
+			// Specific code block selected
+			codeBlock := model.selectedEntry.data.GetCodeBlock(*model.selectedEntry.selectedCodeblockIndex)
+			source = string(codeBlock.Content)
+		}
 	} else {
 		source = ""
 	}
@@ -269,13 +285,41 @@ func (model *Model) signalUpdateMarkdownView() tea.Cmd {
 	}
 }
 
-func (model *Model) copyCodeblockToClipboard(index int) {
+func (model *Model) copyCodeblockToClipboard() {
 	if model.selectedEntry != nil {
-		codeBlocks := model.selectedEntry.GetCodeBlocks()
+		// Determine code block index to use
+		var selectedCodeBlockIndex int
+		if model.selectedEntry.selectedCodeblockIndex != nil {
+			// A code block has been explicitly selected
+			selectedCodeBlockIndex = *model.selectedEntry.selectedCodeblockIndex
+		} else {
+			// No code block has been explicitly selected; default to the first code block
+			selectedCodeBlockIndex = 0
+		}
 
-		if index < len(codeBlocks) {
-			content := codeBlocks[index].Content
+		// Ensure that the code block with the given index exists
+		if selectedCodeBlockIndex < model.selectedEntry.data.GetCodeBlockCount() {
+			codeBlock := model.selectedEntry.data.GetCodeBlock(selectedCodeBlockIndex)
+			content := codeBlock.Content
 			clipboard.Write(clipboard.FmtText, content)
 		}
+	}
+}
+
+func (model Model) selectCodeblock(index int) (tea.Model, tea.Cmd) {
+	if model.selectedEntry != nil && model.selectedEntry.data != nil && index < model.selectedEntry.data.GetCodeBlockCount() {
+		model.selectedEntry.selectedCodeblockIndex = &index
+		return model, model.signalUpdateViewer()
+	} else {
+		return model, nil
+	}
+}
+
+func (model Model) unselectCodeBlock() (tea.Model, tea.Cmd) {
+	if model.selectedEntry != nil && model.selectedEntry.selectedCodeblockIndex != nil {
+		model.selectedEntry.selectedCodeblockIndex = nil
+		return model, model.signalUpdateViewer()
+	} else {
+		return model, nil
 	}
 }
