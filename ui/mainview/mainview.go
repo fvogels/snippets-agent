@@ -5,11 +5,11 @@ import (
 	"code-snippets/debug"
 	"code-snippets/ui/components/entrylist"
 	"code-snippets/ui/components/horizontal"
-	"code-snippets/ui/components/mdview"
 	"code-snippets/ui/components/taginput"
 	"code-snippets/ui/components/taglist"
 	"code-snippets/ui/components/target"
 	"code-snippets/ui/components/vertical"
+	"code-snippets/ui/components/viewer"
 	"code-snippets/util"
 	"slices"
 	"strings"
@@ -35,6 +35,7 @@ type Targets struct {
 	tagInput  target.Identifier
 	tagList   target.Identifier
 	entryList target.Identifier
+	viewer    target.Identifier
 }
 
 func New(repository data.Repository) tea.Model {
@@ -46,7 +47,7 @@ func New(repository data.Repository) tea.Model {
 
 	pane := vertical.New()
 	pane.Add(func(size util.Size) int { return entryListHeight }, target.New(entrylist.New(), &targets.entryList))
-	pane.Add(func(size util.Size) int { return size.Height - entryListHeight }, mdview.New())
+	pane.Add(func(size util.Size) int { return size.Height - entryListHeight }, target.New(viewer.New(), &targets.viewer))
 
 	mainView := horizontal.New()
 	mainView.Add(func(size util.Size) int { return tagListWidth }, target.New(taglist.New(), &targets.tagList))
@@ -257,8 +258,13 @@ func (model *Model) signalUpdateMarkdownView() tea.Cmd {
 	}
 
 	return func() tea.Msg {
-		return mdview.MsgSetSource{
-			Source: source,
+		return target.MsgTargetted{
+			Target: model.targets.viewer,
+			Message: viewer.MsgSetDocument{
+				Document: viewer.Markdown{
+					Source: source,
+				},
+			},
 		}
 	}
 }
