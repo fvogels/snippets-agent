@@ -34,17 +34,12 @@ func (model Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			updatedChild, command := model.child.Update(message.Message)
 			model.child = updatedChild
 			return model, command
-		} else {
-			updatedChild, command := model.child.Update(message)
-			model.child = updatedChild
-			return model, command
 		}
-
-	default:
-		updatedChild, command := model.child.Update(message)
-		model.child = updatedChild
-		return model, command
 	}
+
+	updatedChild, command := model.child.Update(message)
+	model.child = updatedChild
+	return model, command
 }
 
 func (model Model) View() string {
